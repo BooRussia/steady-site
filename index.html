@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Steady — the calm task manager for Windows</title>
+  <meta name="description" content="Steady is a free, tiny task manager for Windows. It shows only what you can close, keeps the list still, cleans up your drives, checks your drivers and warns you about anything suspicious.">
+  <meta property="og:title" content="Steady — the calm task manager for Windows">
+  <meta property="og:description" content="Free and under half a megabyte. Shows only what you can close, holds the list still, finds what's eating your drive, checks your drivers and flags sketchy programs.">
+  <meta property="og:image" content="https://boorussia.github.io/steady-site/media/og.jpg">
+  <meta property="og:url" content="https://boorussia.github.io/steady-site/">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#050a06">
+  <link rel="icon" href="img/logo.svg" type="image/svg+xml">
+  <link rel="preload" href="fonts/Figtree-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/style.css?v=6">
+</head>
+<body>
+  <div class="world" id="world" aria-hidden="true">
+    <canvas id="sky"></canvas>
+    <div class="car" id="car">
+      <svg viewBox="0 0 1000 300" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="carRim" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#ffc24d"/><stop offset=".34" stop-color="#f4622c"/><stop offset=".72" stop-color="#9457cf"/><stop offset="1" stop-color="#4a7fdc"/>
+          </linearGradient>
+          <linearGradient id="carBody" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#1b1b30"/><stop offset=".55" stop-color="#0b0b16"/><stop offset="1" stop-color="#040409"/>
+          </linearGradient>
+          <linearGradient id="carWing" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#e8552a"/><stop offset=".45" stop-color="#31406f"/><stop offset="1" stop-color="#2a6fd0"/>
+          </linearGradient>
+        </defs>
+        <path fill="#07070f" d="M104 132 132 130 176 226 134 228Z"/>
+        <path fill="url(#carWing)" d="M18 124 170 104 174 122 26 144Z"/>
+        <path fill="#07070f" d="M18 118 52 113 74 222 44 228ZM150 106 178 102 186 150 160 156Z"/>
+        <path fill="url(#carBody)" d="M176 240C236 226 296 204 350 176 384 158 412 138 432 124L470 122C480 122 486 130 490 142L560 152C604 162 650 178 708 198 776 218 836 232 896 240L908 248 872 256 744 254 650 272 236 276 176 266Z"/>
+        <path fill="none" stroke="#070710" stroke-width="9" stroke-linecap="round" d="M472 134C510 106 566 118 592 158"/>
+        <circle cx="508" cy="136" r="15" fill="#15152a"/>
+        <path fill="#07070f" d="M590 146 622 142 624 152 594 156Z"/>
+        <path fill="none" stroke="#6d55c8" stroke-width="3" opacity=".75" stroke-linecap="round" d="M286 256C360 262 500 258 612 246"/>
+        <path fill="#07070f" d="M800 272 984 266 990 284 818 292Z"/>
+        <path fill="url(#carWing)" d="M936 242 990 238 994 288 940 292Z" opacity=".85"/>
+        <path fill="none" stroke="url(#carRim)" stroke-width="3" stroke-linecap="round" d="M178 238C236 224 296 202 350 174 384 156 412 136 432 122L470 120C480 120 486 128 490 140L560 150C604 160 650 176 708 196 776 216 836 230 896 238L906 245"/>
+        <g class="wheel" data-c="140 226">
+          <circle cx="140" cy="226" r="68" fill="#050509"/>
+          <circle cx="140" cy="226" r="38" fill="#0d0d18" stroke="#2a2a3c" stroke-width="3"/>
+          <path stroke="#3a3a52" stroke-width="5" d="M140 192V260M106 226H174M116 202 164 250M164 202 116 250"/>
+          <circle cx="140" cy="226" r="9" fill="#34344a"/>
+        </g>
+        <path fill="none" stroke="#ff8a3a" stroke-width="3.5" opacity=".95" stroke-linecap="round" d="M84 190A68 68 0 0 1 134 158"/>
+        <g class="wheel" data-c="790 228">
+          <circle cx="790" cy="228" r="63" fill="#050509"/>
+          <circle cx="790" cy="228" r="35" fill="#0d0d18" stroke="#2a2a3c" stroke-width="3"/>
+          <path stroke="#3a3a52" stroke-width="4" d="M790 196V260M758 228H822M767 205 813 251M813 205 767 251"/>
+          <circle cx="790" cy="228" r="8" fill="#34344a"/>
+        </g>
+        <path fill="none" stroke="#7d6be0" stroke-width="3" opacity=".8" stroke-linecap="round" d="M736 196A63 63 0 0 1 786 165"/>
+      </svg>
+    </div>
+    <div class="word-layer"><span class="word" id="word">Steady</span></div>
+    <canvas id="life"></canvas>
+  </div>
+
+  <header class="nav" id="nav">
+    <a class="brand" href="#top" aria-label="Steady, back to top">
+      <img src="img/logo.svg" alt="" width="28" height="28">
+      <span>Steady</span>
+    </a>
+    <nav class="links" aria-label="Sections">
+      <a href="#tools">Tools</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="btn btn-quiet btn-small download-link" href="https://github.com/BooRussia/steady-releases/releases/latest/download/Steady.exe">Download</a>
+  </header>
+
+  <a class="scroll-orb" id="scrollOrb" href="#download" aria-label="Jump to download">
+    <canvas width="88" height="88"></canvas>
+  </a>
+
+  <main id="top">
+    <!-- ============ RACING: the spectrum and the car ============ -->
+    <section class="race" id="race">
+      <div class="pin" id="racePin">
+        <div class="race-title">
+          <h1>Your PC is racing.</h1>
+          <p class="race-by">Steady</p>
+        </div>
+        <div class="race-foot">
+          <p class="lede">Steady is the calm, free task manager for Windows. It finds what's slowing you down, and holds still.</p>
+          <div class="cta-row">
+            <a class="btn btn-primary download-link" href="https://github.com/BooRussia/steady-releases/releases/latest/download/Steady.exe">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16"/></svg>
+              Download for Windows
+            </a>
+          </div>
+          <p class="meta"><span class="release-version">v1.2.1</span> · <span class="release-size">455 KB</span> · No installer · No account</p>
+          <p class="after" hidden>If Windows says “Windows protected your PC”, that's normal for a new app. Click <b>More info</b>, then <b>Run anyway</b>.</p>
+        </div>
+        <p class="hint" id="hint">Scroll to slow down</p>
+      </div>
+    </section>
+
+    <!-- ============ THE LIST: chaos settles as you scroll ============ -->
+    <section class="still" id="still">
+      <div class="pin">
+        <div class="still-copy">
+          <div class="beat" data-beat="0">
+            <h2>Try to click Chrome.</h2>
+            <p>You've been here before. The list moves right before you click.</p>
+          </div>
+          <div class="beat" data-beat="1">
+            <h2>Only what you can close.</h2>
+            <p>Windows' own processes step aside. Seven rows you couldn't end anyway.</p>
+          </div>
+          <div class="beat" data-beat="2">
+            <h2>A list that holds still.</h2>
+            <p>Nothing moves while your mouse is on it. End task takes two clicks, so nothing closes by accident.</p>
+          </div>
+          <p class="feedback" id="feedback" aria-live="polite">Go on. Aim for it.</p>
+        </div>
+        <div class="list" id="list" data-stage="0" role="group" aria-label="A demo process list that settles as you scroll"></div>
+      </div>
+    </section>
+
+    <!-- ============ QUIET: the light becomes one line ============ -->
+    <section class="quiet" id="quiet">
+      <div class="pin">
+        <p class="quiet-settle" id="quietSettle">Let it settle.</p>
+        <div class="quiet-brand" id="quietBrand">
+          <p class="quiet-name">Steady</p>
+          <p class="quiet-tag">The calm task manager for Windows.</p>
+        </div>
+        <h2 class="quiet-line" id="quietLine">Seven tools. One calm app.</h2>
+        <p class="quiet-sub" id="quietSub">Keep scrolling. Watch it grow.</p>
+      </div>
+    </section>
+
+    <!-- ============ SEVEN TOOLS: one limb each ============ -->
+    <div class="tools" id="tools">
+      <section class="tool" id="t-programs">
+        <h2>See the hog at a glance.</h2>
+        <p class="body">One row per app, with its real name and icon. An impact rating and heat colors show what's working your PC hardest.</p>
+        <figure class="shot"><a class="zoom" href="img/programs.webp"><img src="img/programs.webp" alt="Steady's Programs tab, with apps sorted by impact" width="1264" height="761" loading="lazy"></a></figure>
+        <details class="more">
+          <summary>Everything in Programs</summary>
+          <ul>
+            <li><b>Impact rating</b>: Low, Moderate, High or Very high, combining CPU, memory, GPU and disk.</li>
+            <li><b>Biggest-user cards</b> for CPU, memory, GPU and disk, plus how much is you and how much is Windows.</li>
+            <li><b>Hide idle</b> tucks away background stuff that isn't using anything.</li>
+            <li><b>Details on click</b>: file location, publisher and signature, process IDs, running time, command line.</li>
+            <li><b>“What is this?”</b> searches any program you don't recognize.</li>
+            <li><b>End it and everything it started</b>, for launchers that spawn helpers.</li>
+          </ul>
+        </details>
+      </section>
+
+      <section class="tool tool-pin" id="t-performance">
+        <div class="pin">
+          <div class="tool-in">
+            <h2>The hills are your PC.</h2>
+            <p class="body">Live graphs of the last 60 seconds: CPU and every core, memory, every graphics card, every drive, your network.</p>
+            <button type="button" class="btn btn-quiet" id="stress">Press and hold to add load</button>
+            <dl class="readout" id="readout">
+              <div class="m-cpu"><dt>CPU</dt><dd data-m="cpu">12%</dd></div>
+              <div class="m-mem"><dt>Memory</dt><dd data-m="mem">41%</dd></div>
+              <div class="m-gpu"><dt>GPU</dt><dd data-m="gpu">8%</dd></div>
+              <div class="m-disk"><dt>Disk</dt><dd data-m="disk">1%</dd></div>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <section class="tool" id="t-storage">
+        <h2>Find what's eating your drive.</h2>
+        <p class="body">Click a drive. Steady scans 1.5 million files in seconds and lists what's using the space, biggest first.</p>
+        <div class="demo" id="storage" role="group" aria-label="Storage demo">
+          <div class="drive">
+            <div class="drive-top"><span><b>C:</b> Local Disk</span><span id="driveFree">160 GB free</span></div>
+            <div class="bar" id="driveBar"><span></span></div>
+          </div>
+          <button type="button" class="crumb" id="crumb" hidden>Back to C:</button>
+          <ul class="files" id="files"></ul>
+        </div>
+        <p class="note" id="storageNote" aria-live="polite">A demo. Try deleting something. Nothing on your PC is touched.</p>
+        <details class="more">
+          <summary>Everything in Storage</summary>
+          <a class="zoom" href="img/biggest-files.webp"><img src="img/biggest-files.webp" alt="The real Storage tab, listing the biggest files on a drive" width="1000" height="761" loading="lazy"></a>
+          <ul>
+            <li><b>Click into folders</b> to drill down, or jump to the <b>biggest files</b> on the drive.</li>
+            <li><b>Duplicate spotting</b> for big files saved twice.</li>
+            <li><b>Delete from the list</b>, to the Recycle Bin or for good.</li>
+            <li><b>Uninstall the right way</b>: apps use their own uninstaller, and Steam games go through Steam.</li>
+            <li><b>Windows stays safe</b>: system folders and files are locked, with an explanation why.</li>
+            <li><b>Quick wins</b>: empty the Recycle Bin, clear old temp files, check Downloads.</li>
+          </ul>
+        </details>
+      </section>
+
+      <section class="tool" id="t-drivers">
+        <h2>Know which drivers are behind.</h2>
+        <p class="body">Every main component, the driver it runs, and the newest version available, side by side.</p>
+        <div class="demo">
+          <table class="drivers">
+            <thead><tr><th scope="col">Component</th><th scope="col">You have</th><th scope="col">Newest</th><th scope="col"><span class="sr">Status</span></th></tr></thead>
+            <tbody>
+              <tr><th scope="row">NVIDIA graphics</th><td id="drvHave">612.30</td><td>617.42</td><td><button type="button" class="act" id="drvUpdate">Update</button></td></tr>
+              <tr><th scope="row">Network</th><td>10.74</td><td>Nothing newer</td><td><span class="pill-ok">Looks current</span></td></tr>
+              <tr><th scope="row">AMD chipset</th><td>8.08</td><td>On AMD's site</td><td><span class="pill-info">Check maker</span></td></tr>
+              <tr><th scope="row">BIOS</th><td>1.40</td><td>On your board's page</td><td><span class="pill-info">Stays manual</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note" id="driverNote" aria-live="polite">Steady never flashes your BIOS. Some things should stay manual.</p>
+        <details class="more">
+          <summary>How driver checks work</summary>
+          <a class="zoom" href="img/drivers.webp"><img src="img/drivers.webp" alt="The real Drivers tab, comparing installed and newest versions" width="1160" height="761" loading="lazy"></a>
+          <ul>
+            <li><b>NVIDIA</b>: checked directly with NVIDIA. One click downloads the official installer, verifies NVIDIA's signature, and opens it.</li>
+            <li><b>Windows Update</b>: any newer driver Microsoft has for your exact PC installs in one click, after Windows asks for permission.</li>
+            <li><b>Everything else</b> (chipset, network, audio, BIOS) opens the right download page.</li>
+          </ul>
+        </details>
+      </section>
+
+      <section class="tool" id="t-alerts">
+        <h2>Something sketchy? You'll know.</h2>
+        <p class="body">Steady flags programs that behave like malware, and explains each one in plain English. Three of these don't belong. Find them.</p>
+        <div class="demo" id="procs" role="group" aria-label="Spot the suspicious programs"></div>
+        <p class="note" id="alertNote" aria-live="polite">It's not antivirus. It points out unusual behavior so you can decide.</p>
+        <details class="more">
+          <summary>Everything Alerts looks for</summary>
+          <a class="zoom" href="img/alerts.webp"><img src="img/alerts.webp" alt="The real Alerts tab, explaining two findings in plain English" width="1000" height="761" loading="lazy"></a>
+          <ul>
+            <li><b>Fake Windows processes</b> and look-alike names.</li>
+            <li><b>Disguised files</b> and <b>unsigned programs hiding</b> in Temp, AppData or the Recycle Bin.</li>
+            <li><b>Hidden or encoded scripts</b>, decoded so you can read what they really run.</li>
+            <li><b>Crypto-miners</b>, hacking tools, and heavy activity with no window.</li>
+            <li><b>Remote-access apps</b> scammers love, and <b>risky startup entries</b>.</li>
+            <li>End it, or <b>scan it with Microsoft Defender</b> in one click.</li>
+          </ul>
+        </details>
+      </section>
+
+      <section class="tool" id="t-orbs">
+        <h2>Three small orbs by your clock.</h2>
+        <p class="body">Glass orbs fill with liquid to your CPU, memory and GPU use. They ripple when calm and turn warm when busy. Drag one.</p>
+        <div class="orbs" id="orbs">
+          <div class="orb-cell"><canvas data-orb="cpu" tabindex="0" role="slider" aria-label="CPU use" aria-valuemin="0" aria-valuemax="100" aria-valuenow="22"></canvas><span>CPU <b data-orb-v="cpu">22%</b></span></div>
+          <div class="orb-cell"><canvas data-orb="mem" tabindex="0" role="slider" aria-label="Memory use" aria-valuemin="0" aria-valuemax="100" aria-valuenow="56"></canvas><span>Memory <b data-orb-v="mem">56%</b></span></div>
+          <div class="orb-cell"><canvas data-orb="gpu" tabindex="0" role="slider" aria-label="GPU use" aria-valuemin="0" aria-valuemax="100" aria-valuenow="34"></canvas><span>GPU <b data-orb-v="gpu">34%</b></span></div>
+        </div>
+        <div class="taskbar" aria-hidden="true">
+          <span class="tb-mid"></span>
+          <canvas data-mini="cpu"></canvas><canvas data-mini="mem"></canvas><canvas data-mini="gpu"></canvas>
+          <span class="tb-clock" id="tbClock">12:00</span>
+        </div>
+        <p class="note">Actual size, on your taskbar. Close Steady's window and just the orbs keep running, at about 0.07% CPU. They hide while a game or video is fullscreen.</p>
+      </section>
+
+      <section class="tool" id="t-pc">
+        <h2>Every spec. One click to copy.</h2>
+        <p class="body">Here's the most a browser can guess about your PC, next to what Steady shows you.</p>
+        <div class="demo">
+          <table class="specs" id="specs">
+            <thead><tr><th scope="col"><span class="sr">Part</span></th><th scope="col">Your browser guesses</th><th scope="col">Steady shows</th></tr></thead>
+            <tbody></tbody>
+          </table>
+          <button type="button" class="act act-copy" id="copySpecs">Copy all specs</button>
+        </div>
+        <p class="note">Worked out in your browser. Nothing leaves this page.</p>
+        <details class="more">
+          <summary>Updates and settings</summary>
+          <a class="zoom" href="img/specs.webp"><img src="img/specs.webp" alt="The real My PC page, listing hardware specs" width="1000" height="761" loading="lazy"></a>
+          <ul>
+            <li><b>Updates itself</b> from GitHub on launch, checks every download's SHA-256 fingerprint, and rolls back automatically if anything goes wrong.</li>
+            <li><b>A blue update button</b> tells you when something new is ready, if you turn auto-install off.</li>
+            <li><b>Start with Windows</b>, <b>always on top</b>, or a <b>lighter refresh rate</b>.</li>
+          </ul>
+        </details>
+      </section>
+    </div>
+
+    <section class="tiny" id="tiny">
+      <h2 class="release-size">455 KB</h2>
+      <p class="body">That's the whole app. No installer, no account, no ads, no trial. It runs on the .NET Framework already in Windows, at about a tenth of a percent of your CPU.</p>
+    </section>
+
+    <!-- ============ HOME: the word, the tree, the download ============ -->
+    <section class="home" id="home">
+      <span class="anchor" id="download"></span>
+      <div class="pin">
+        <h2 class="sr">Steady</h2>
+        <div class="home-cta" id="homeCta">
+          <p class="home-line">Your PC, finally calm.</p>
+          <a class="btn btn-primary btn-big download-link" href="https://github.com/BooRussia/steady-releases/releases/latest/download/Steady.exe">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16"/></svg>
+            Download Steady
+          </a>
+          <p class="meta"><span class="release-version">v1.2.1</span> · <span class="release-size">455 KB</span> · Windows 10 &amp; 11 · <a href="https://github.com/BooRussia/steady-releases/releases">All releases</a></p>
+          <p class="after" hidden>If Windows says “Windows protected your PC”, that's normal for a new app. Click <b>More info</b>, then <b>Run anyway</b>.</p>
+          <button type="button" class="btn-text" id="copyLink" hidden>On a phone? Copy the link for your PC</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ROOTS: the details, underground ============ -->
+    <section class="roots" id="roots">
+      <svg class="rootlines" id="rootlines" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMin slice" aria-hidden="true"></svg>
+      <div class="roots-in">
+        <h2 id="compare">Same job. Less frustration.</h2>
+        <div class="table-wrap">
+          <table class="compare">
+            <thead>
+              <tr><th scope="col"><span class="sr">Feature</span></th><th scope="col">Windows Task Manager</th><th scope="col" class="us">Steady</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">Shows only programs you can close</th><td>Everything, mixed together</td><td class="us">Yes</td></tr>
+              <tr><th scope="row">List holds still while you aim</th><td>Re-sorts every second</td><td class="us">Yes</td></tr>
+              <tr><th scope="row">One-glance impact rating</th><td>No</td><td class="us">Yes</td></tr>
+              <tr><th scope="row">Two-click End task safety</th><td>Ends immediately</td><td class="us">Yes</td></tr>
+              <tr><th scope="row">Live performance graphs</th><td>Yes</td><td class="us">Yes</td></tr>
+              <tr><th scope="row">Find and delete what fills your drive</th><td>No</td><td class="us">Yes</td></tr>
+              <tr><th scope="row">Driver version checks and updates</th><td>No</td><td class="us">Yes</td></tr>
+              <tr><th scope="row">Suspicious-program alerts</th><td>No</td><td class="us">Yes</td></tr>
+              <tr><th scope="row">Taskbar usage widget</th><td>No</td><td class="us">Yes</td></tr>
+              <tr><th scope="row">Full PC specs, one-click copy</th><td>Partly</td><td class="us">Yes</td></tr>
+              <tr><th scope="row">Price</th><td>Built in</td><td class="us">Free</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2 id="faq">Good to know.</h2>
+        <div class="qa">
+          <details>
+            <summary>Windows says “Windows protected your PC.” Is that normal?</summary>
+            <p>Yes. Steady is new and isn't code-signed yet, so Microsoft SmartScreen shows that warning the first time. Click <b>More info</b>, then <b>Run anyway</b>. You only need to do it once.</p>
+          </details>
+          <details>
+            <summary>Do I need to install it?</summary>
+            <p>No. Steady is a single <span class="release-size">455 KB</span> file. Download it, put it anywhere you like (Documents works well), and double-click. It uses the .NET Framework that already comes with Windows 10 and 11.</p>
+          </details>
+          <details>
+            <summary>Does it need admin rights?</summary>
+            <p>No. Steady runs as you. If you also want to manage apps you launched as administrator, there's a one-click “Restart as admin” in Settings.</p>
+          </details>
+          <details>
+            <summary>How does it update?</summary>
+            <p>Each time it starts, Steady checks its GitHub releases. If there's a new version it downloads it, checks the file's SHA-256 fingerprint and version, swaps itself out and restarts, with an automatic rollback if anything goes wrong. You can switch auto-install off in Settings. The update button then turns blue and waits for you.</p>
+          </details>
+          <details>
+            <summary>Does it send my data anywhere?</summary>
+            <p>No accounts, no tracking, no analytics. Steady only goes online to check GitHub for its own updates and, when you open the Drivers tab, to ask NVIDIA and Windows Update for the newest driver versions.</p>
+          </details>
+          <details>
+            <summary>Is it antivirus?</summary>
+            <p>No. Alerts point out unusual behavior so you can decide, and offer a one-click scan with Microsoft Defender, which is already built into Windows.</p>
+          </details>
+        </div>
+
+        <footer class="foot">
+          <span>Steady, the calm task manager for Windows</span>
+          <span>Windows is a trademark of Microsoft. Steady is an independent app.</span>
+        </footer>
+      </div>
+    </section>
+  </main>
+
+  <dialog class="viewer" id="viewer" aria-label="Screenshot, full size">
+    <button type="button" class="viewer-close" id="viewerClose">Close</button>
+    <img id="viewerImg" alt="">
+  </dialog>
+
+  <noscript><p class="noscript">This page animates with JavaScript, but the download doesn't need it: <a href="https://github.com/BooRussia/steady-releases/releases/latest/download/Steady.exe">Download Steady.exe</a></p></noscript>
+
+  <script src="js/world.js?v=6" defer></script>
+  <script src="js/main.js?v=6" defer></script>
+</body>
+</html>
