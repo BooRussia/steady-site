@@ -10,7 +10,7 @@
     "precision highp float;",
     "uniform vec2 uRes,uMouse,uCar,uMarkC;",
     "uniform vec3 uP1,uP2;",
-    "uniform float uMarkA,uMarkS,uThick,uSweep,uSweepOn,uAhead,uJag,uExt,uIris,uBloom,uGlint,uGlintA,uSeed,uFlash,uTouch;",
+    "uniform float uMarkA,uMarkS,uThick,uSweep,uSweepOn,uAhead,uJag,uExt,uIris,uBloom,uGlint,uGlintA,uSeed,uFlash,uTouch,uFront,uPulse;",
     "uniform float uT,uFlow,uCalm,uHead,uHills,uGlow,uLoad,uLive,uLight,uGx,uCrest,uGrow,uMouseE,uAlert,uTick,uDim;",
     "uniform sampler2D uN;",
     "float vn(vec2 x){vec2 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);return texture2D(uN,(i+f+.5)/256.).r;}",
@@ -31,8 +31,10 @@
     "  vec2 m=(uMouse-.5)*vec2(uRes.x/uRes.y,1.);",
     "  vec2 dm=p-m;float md=dot(dm,dm);",
     "  p+=dm*uMouseE*.55*exp(-md*16.)*(1.-e);",
-    "  float th=mix(-.36,0.,e);",
-    "  vec2 C=mix(uCar,vec2(0.),e);",
+    // E: the beam's shape finishes collapsing to a level line before it hands over to the mark.
+    "  float E=min(e/.82,1.);",
+    "  float th=mix(-.36,0.,E);",
+    "  vec2 C=mix(uCar,vec2(0.),E);",
     "  vec2 d=vec2(cos(th),sin(th)),n=vec2(-d.y,d.x);",
     "  vec2 q=p-C;",
     "  float u=dot(q,d)-uHead*(1.-e);",
@@ -55,7 +57,7 @@
     "  }",
     // The main trail, narrowing into the car, or into a single line when calm.
     "  float wob=(fbm(vec2(u*1.2-uFlow*.6,3.))-.5)*.05*fade;",
-    "  float w=mix(.034+.34*(1.-exp(min(u,0.)*1.75)),.0016,e);",
+    "  float w=mix(.034+.34*(1.-exp(min(u,0.)*1.75)),.0016,E);",
     "  float vv=(v+wob)/w;",
     "  float t=clamp(.5-vv*.5,0.,1.);",
     "  vec3 mc=spectrum(t);",
@@ -66,7 +68,7 @@
     "  float tail=mix(u<0.?1.:exp(-u*15.),1.,smoothstep(.15,.7,e));",
     "  float edge=smoothstep(1.,.3,abs(vv));",
     "  float a1=edge*tail*mix(.66+.52*streak,1.,e);",
-    "  col=mix(col,mc,clamp(a1,0.,1.)*mix(.96,0.,smoothstep(.72,.9,e)));",
+    "  col=mix(col,mc,clamp(a1,0.,1.)*mix(.96,0.,smoothstep(.88,.99,e)));",
     "  col+=mc*core*.14*fade;",
     // The car's shadow, thrown forward along the ground.
     "  float sh=exp(-pow((u-.26)/.36,2.)-pow((v+.075+u*.07)/.052,2.));",
@@ -156,11 +158,23 @@
     "  return env*(exp(-run*run)*sin(dx*30.-P.z*20.)*.8+exp(-dx*dx*26.)*cos(P.z*24.)*exp(-P.z*2.6));",
     "}",
 
-    // The beam after it collapses: one line that settles, writes a single heartbeat in the
-    // logo's exact shape, and then opens out into the logo itself.
+    // The beam after it collapses: one calm line, until a pulse runs in from the left and leaves
+    // the colored chaos behind it. The line then settles, writes a single heartbeat in the logo's
+    // exact shape, and opens out into the logo itself.
+    "float wake(float x){return smoothstep(uFront+.01,uFront-.3,x);}",
+    "float pulseY(float x){float g=x-uFront;return uPulse*(.075*exp(-g*g/.00014)-.045*exp(-(g+.028)*(g+.028)/.0002)+.014*exp(-(g-.042)*(g-.042)/.0005));}",
+    // True distance to the pulse's own curve, sampled, because its strokes are too steep for a vertical estimate.
+    "float pulseDist(vec2 p){",
+    "  float d=1.;",
+    "  if(uPulse<.001||abs(p.x-uFront)>.16||abs(p.y-uMarkC.y)>.25)return d;",
+    "  vec2 a=vec2(uFront-.07,uMarkC.y+pulseY(uFront-.07));",
+    "  for(int i=1;i<41;i++){float xi=uFront-.07+float(i)*.004;vec2 b=vec2(xi,uMarkC.y+pulseY(xi));d=min(d,seg(p,a,b));a=b;}",
+    "  return d;",
+    "}",
     "float wob(float x,vec2 m){",
     "  float y=0.,free=1.-uExt;",
-    "  if(uJag>.001)y+=uJag*((vn(vec2(x*13.+uT*5.,1.))-.5)*.2+(vn(vec2(x*47.-uT*8.,2.))-.5)*.07);",
+    "  if(uJag>.001)y+=uJag*wake(x)*((vn(vec2(x*13.+uT*5.,1.))-.5)*.2+(vn(vec2(x*47.-uT*8.,2.))-.5)*.07);",
+    "  if(uPulse>.001)y+=pulseY(x);",
     "  y+=free*(pluck(uP1,x)+pluck(uP2,x));",
     "  float off=m.y-uMarkC.y,ox=(x-m.x)/.15;",
     "  return y+free*uTouch*off*.5*exp(-off*off*90.)*exp(-ox*ox);",
@@ -199,10 +213,16 @@
     "  float dB=min(dC,mix(dE,1.,uExt));",
     "  float gb=smoothstep(uSweep+.07,uSweep-.07,x);",
     "  float dG=mix(dF,dB,gb);",
-    "  vec3 lc=mix(cream,spectrum(clamp(x*.62+.5,0.,1.)),clamp(uJag*1.6,0.,1.));",
-    "  float gl=(.3*exp(-dB*90.)+.075*exp(-dB*20.))*gb+(.3*exp(-mix(dF,dV,.7)*90.)+.075*exp(-dV*20.))*(1.-gb)*uAhead;",
+    "  vec3 lc=mix(cream,spectrum(clamp(x*.62+.5,0.,1.)),clamp(uJag*1.6,0.,1.)*wake(x));",
+    // Near the running pulse the glow follows the true distance to its curve, so steep strokes don't smear vertically.
+    "  float pk=uPulse*exp(-pow((x-uFront)/.07,2.)),dP=pulseDist(p);",
+    "  float gl=(.3*exp(-dB*90.)+.075*exp(-dB*20.))*gb+(.3*exp(-mix(mix(dF,dV,.7),dP,pk)*90.)+.075*exp(-mix(dV,dP,pk)*20.))*(1.-gb)*uAhead;",
     "  gl*=1.-.8*uExt;",
     "  col+=lc*gl*uMarkA;",
+    "  if(uPulse>.001){",
+    "    float g=(x-uFront)/.045;vec2 hd=(p-vec2(uFront,uMarkC.y+.03*uPulse))/vec2(.06,.05);",
+    "    col+=mix(cream,spectrum(clamp(x*.62+.5,0.,1.)),.35)*(exp(-g*g)*exp(-dP*70.)*.9+exp(-dot(hd,hd))*.16)*uPulse*uMarkA;",
+    "  }",
     "  if(uBloom>.001)col+=spectrum(clamp(.5-q.y/11.,0.,1.))*exp(-dC*13.)*exp(-q.x*q.x/130.)*uBloom*.55*gb*uMarkA;",
     "  if(uSweepOn>.001){",
     "    float tt=uSweep-x,dT=min(dC,dE);",
@@ -579,6 +599,8 @@
       sky.uniform1f(u.uSeed, st.mSeed);
       sky.uniform1f(u.uFlash, st.mFlash);
       sky.uniform1f(u.uTouch, st.mTouch);
+      sky.uniform1f(u.uFront, st.mFront);
+      sky.uniform1f(u.uPulse, st.mPulse);
       sky.uniform3f(u.uP1, st.p1.x, st.p1.a, st.p1.t);
       sky.uniform3f(u.uP2, st.p2.x, st.p2.a, st.p2.t);
       sky.uniform1f(u.uGlow, st.glow);

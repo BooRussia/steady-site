@@ -109,7 +109,7 @@
     cur.load += (loadTarget - cur.load) * (1 - Math.exp(-dt * (loadTarget ? 2.6 : 1.5)));
 
     var a = cur.a, b = cur.b, h = cur.h, g = cur.g, f = cur.f;
-    var calm = clamp(.1 * sm(0, 1, a) + .42 * sm(.08, 1, b) + .48 * sm(0, .2, h));
+    var calm = clamp(.1 * sm(0, 1, a) + .42 * sm(.08, 1, b) + .48 * sm(0, .07, h));
 
     ptr.x += (ptr.tx - ptr.x) * (1 - Math.exp(-dt * 6));
     ptr.y += (ptr.ty - ptr.y) * (1 - Math.exp(-dt * 6));
@@ -129,10 +129,13 @@
     var treeX = wide ? mix(.75, .5, homeLift) : .5;
     var asp = vw / vh;
 
-    // the quiet: noise settles, one beat is written across the dark, the line opens out
+    // the quiet: the beam thins to one line, a pulse runs in from the left and leaves chaos
+    // behind it, the chaos settles, one beat is written across the dark, the line opens out
     // into the logo, and the logo drops to the hill as a seed
     var edge = sm(0, .92, calm);
-    var settle = 1 - sm(.015, .2, h);
+    var frontT = clamp((h - .05) / .12);
+    var frontX = frontT <= 0 ? -9 : (frontT >= 1 ? 9 : mix(-asp * .5 - .12, asp * .5 + .45, frontT));
+    var settle = 1 - sm(.18, .27, h);
     var open = sm(.54, .62, h), pull = sm(.52, .66, h), fall = sm(.72, .88, h);
     var sPulse = Math.min(.034, .8 * vw / (16 * vh)), sLogo = Math.min(.0195, .62 * vw / (23 * vh));
     var mS = mix(mix(sPulse, sLogo, pull), .0007, Math.pow(fall, .6));
@@ -142,7 +145,7 @@
     var sweepE = mix(sweepT, .5 + 4 * Math.pow(sweepT - .5, 3), .6);
     var sweepX = sweepT <= 0 ? -9 : (sweepT >= 1 ? 9 : mix(-asp * .5 - .1, asp * .5 + .55, sweepE));
     var sweepOn = bell(0, .02, .97, 1, sweepT);
-    var mA = sm(.66, .86, edge) * (1 - sm(.9, .95, h));
+    var mA = sm(.82, .93, edge) * (1 - sm(.9, .95, h));
     lineFree = mA > .5 && open < .5 && h < .6 && y >= M.quiet.top - vh;
     lineY = (.5 - mCy) * vh;
     plucks.forEach(function (pl) { pl.t = Math.min(pl.t + dt, 9); });
@@ -168,6 +171,7 @@
         mSeed: bell(.8, .86, .9, .96, h),
         mFlash: sweepOn * Math.exp(-(sweepX / .3) * (sweepX / .3)),
         mTouch: reduce ? 0 : 1,
+        mFront: frontX, mPulse: bell(0, .03, .97, 1, frontT),
         p1: plucks[0], p2: plucks[1],
         glow: cur.glow, load: cur.load, alert: cur.alert,
         light: light, treeX: treeX, crest: crest,
@@ -199,7 +203,7 @@
     racePin.style.visibility = a > .7 ? "hidden" : "visible";
     if (hint) hint.style.setProperty("--hint", reduce ? 1 : (.5 + .5 * Math.sin(t * 2)).toFixed(3));
 
-    quietSettle.style.opacity = bell(.035, .07, .15, .2, h);
+    quietSettle.style.opacity = bell(.16, .195, .245, .275, h);
     var brandOn = bell(.61, .66, .72, .76, h);
     quietBrand.style.opacity = brandOn;
     quietBrand.style.transform = "translateY(" + ((1 - sm(.61, .67, h)) * 16).toFixed(1) + "px)";
