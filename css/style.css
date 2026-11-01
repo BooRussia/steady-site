@@ -116,7 +116,7 @@ code, .mono { font-family: var(--mono); font-size: .88em; }
 .race { height: 210vh; }
 .race-title { position: absolute; top: 22%; left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100vw - 32px); text-align: center; }
 .race-title h1 { font-size: min(7.1vw, 16.5vh); letter-spacing: -.04em; line-height: 1; }
-.race-by { font-size: clamp(18px, 1.9vw, 30px); font-weight: 600; letter-spacing: -.02em; line-height: 1; margin: .5em 0 0; text-align: right; }
+.race-by { font-size: clamp(20px, 2.2vw, 34px); font-weight: 600; letter-spacing: -.02em; line-height: 1; margin: .55em 0 0; text-align: center; opacity: .82; }
 .race-foot { position: absolute; left: var(--gutter); bottom: clamp(24px, 6vh, 64px); max-width: 26em; }
 .lede { margin: 0; font-size: clamp(17px, 1.4vw, 20px); line-height: 1.45; }
 .cta-row { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 22px; margin-top: 20px; }

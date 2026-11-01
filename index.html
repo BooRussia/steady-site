@@ -14,7 +14,7 @@
   <meta name="theme-color" content="#050a06">
   <link rel="icon" href="img/logo.svg" type="image/svg+xml">
   <link rel="preload" href="fonts/Figtree-Variable.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/style.css?v=6">
+  <link rel="stylesheet" href="css/style.css?v=7">
 </head>
 <body>
   <div class="world" id="world" aria-hidden="true">
@@ -26,37 +26,97 @@
             <stop offset="0" stop-color="#ffc24d"/><stop offset=".34" stop-color="#f4622c"/><stop offset=".72" stop-color="#9457cf"/><stop offset="1" stop-color="#4a7fdc"/>
           </linearGradient>
           <linearGradient id="carBody" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#1b1b30"/><stop offset=".55" stop-color="#0b0b16"/><stop offset="1" stop-color="#040409"/>
+            <stop offset="0" stop-color="#23233c"/><stop offset=".45" stop-color="#0e0e1b"/><stop offset="1" stop-color="#040409"/>
+          </linearGradient>
+          <linearGradient id="carPod" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#2b2b48"/><stop offset=".35" stop-color="#14142a"/><stop offset="1" stop-color="#06060d"/>
           </linearGradient>
           <linearGradient id="carWing" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0" stop-color="#e8552a"/><stop offset=".45" stop-color="#31406f"/><stop offset="1" stop-color="#2a6fd0"/>
           </linearGradient>
+          <linearGradient id="carLivery" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#ffc24d" stop-opacity="0"/><stop offset=".12" stop-color="#ffb347"/><stop offset=".34" stop-color="#f4622c"/><stop offset=".6" stop-color="#b34aa8"/><stop offset=".82" stop-color="#6a55d6"/><stop offset="1" stop-color="#3d7be0"/>
+          </linearGradient>
+          <radialGradient id="carHub" cx=".42" cy=".38" r=".7">
+            <stop offset="0" stop-color="#34344e"/><stop offset=".6" stop-color="#16162a"/><stop offset="1" stop-color="#0a0a14"/>
+          </radialGradient>
         </defs>
-        <path fill="#07070f" d="M104 132 132 130 176 226 134 228Z"/>
-        <path fill="url(#carWing)" d="M18 124 170 104 174 122 26 144Z"/>
-        <path fill="#07070f" d="M18 118 52 113 74 222 44 228ZM150 106 178 102 186 150 160 156Z"/>
-        <path fill="url(#carBody)" d="M176 240C236 226 296 204 350 176 384 158 412 138 432 124L470 122C480 122 486 130 490 142L560 152C604 162 650 178 708 198 776 218 836 232 896 240L908 248 872 256 744 254 650 272 236 276 176 266Z"/>
-        <path fill="none" stroke="#070710" stroke-width="9" stroke-linecap="round" d="M472 134C510 106 566 118 592 158"/>
-        <circle cx="508" cy="136" r="15" fill="#15152a"/>
-        <path fill="#07070f" d="M590 146 622 142 624 152 594 156Z"/>
-        <path fill="none" stroke="#6d55c8" stroke-width="3" opacity=".75" stroke-linecap="round" d="M286 256C360 262 500 258 612 246"/>
-        <path fill="#07070f" d="M800 272 984 266 990 284 818 292Z"/>
-        <path fill="url(#carWing)" d="M936 242 990 238 994 288 940 292Z" opacity=".85"/>
-        <path fill="none" stroke="url(#carRim)" stroke-width="3" stroke-linecap="round" d="M178 238C236 224 296 202 350 174 384 156 412 136 432 122L470 120C480 120 486 128 490 140L560 150C604 160 650 176 708 196 776 216 836 230 896 238L906 245"/>
-        <g class="wheel" data-c="140 226">
-          <circle cx="140" cy="226" r="68" fill="#050509"/>
-          <circle cx="140" cy="226" r="38" fill="#0d0d18" stroke="#2a2a3c" stroke-width="3"/>
-          <path stroke="#3a3a52" stroke-width="5" d="M140 192V260M106 226H174M116 202 164 250M164 202 116 250"/>
-          <circle cx="140" cy="226" r="9" fill="#34344a"/>
+
+        <!-- rear wing: swan-neck mount, endplate, main plane and flap, beam wing -->
+        <path fill="none" stroke="#0a0a14" stroke-width="9" stroke-linecap="round" d="M104 142C118 170 134 196 176 222"/>
+        <path fill="#07070f" d="M26 116 136 108 146 252 40 262Z"/>
+        <path fill="url(#carWing)" d="M22 112 138 102 142 122 26 134Z"/>
+        <path fill="#0d0d1a" d="M30 138 140 128 142 140 32 150Z"/>
+        <path fill="#0b0b16" d="M56 214 146 208 148 222 60 228Z"/>
+        <path fill="none" stroke="url(#carRim)" stroke-width="3" stroke-linecap="round" d="M23 112 137 102"/>
+
+        <!-- diffuser and rear crash structure -->
+        <path fill="#06060c" d="M60 262 158 254 190 284 74 294Z"/>
+        <path fill="#0a0a14" d="M150 226 214 214 220 246 156 252Z"/>
+
+        <!-- the driver's helmet, behind the cockpit rim -->
+        <circle cx="466" cy="142" r="18" fill="#191932"/>
+        <path fill="#f4622c" d="M470 133C479 132 486 137 486 144L474 146C473 140 472 136 470 133Z"/>
+
+        <!-- body: engine cover, airbox, cockpit, chassis, nose, floor -->
+        <path fill="url(#carBody)" d="M150 236 178 212C250 180 330 140 392 116L410 106 436 108 438 126C454 130 470 136 486 140L560 158C620 170 700 190 780 206 860 220 930 232 980 238 992 240 995 248 984 252 920 256 860 258 760 262L700 266C660 272 640 278 610 280L300 284C240 284 200 280 172 270Z"/>
+        <path fill="#04040a" d="M412 110 434 111 436 124 414 122Z"/>
+
+        <!-- sidepod with its inlet, and the spectrum swoosh -->
+        <path fill="url(#carPod)" d="M330 194C400 184 480 180 560 182L590 188 592 238C560 252 470 262 360 266 300 266 250 250 210 232 250 214 290 202 330 194Z"/>
+        <path fill="#020205" d="M574 186 590 188 592 236 578 240Z"/>
+        <path fill="url(#carLivery)" opacity=".92" d="M214 230C300 206 420 198 560 198 660 200 760 222 904 240L906 247C760 230 660 209 560 208 420 209 300 216 216 238Z"/>
+        <path fill="none" stroke="#fff3e4" stroke-width="2" opacity=".2" stroke-linecap="round" d="M352 190C430 182 500 180 560 183"/>
+        <!-- the logo's pulse on the engine cover -->
+        <path fill="none" stroke="#fff3e4" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" opacity=".88" transform="translate(238 167) rotate(-9) scale(3.2)" d="M0 13H8L10.2 8 13.4 17.5 15.6 11.8H26"/>
+
+        <!-- halo and mirror -->
+        <path fill="none" stroke="#08080f" stroke-width="9" stroke-linecap="round" d="M420 130C470 116 520 124 560 158"/>
+        <path fill="none" stroke="#08080f" stroke-width="6" stroke-linecap="round" d="M548 148 556 170"/>
+        <path fill="none" stroke="#9457cf" stroke-width="2" opacity=".7" stroke-linecap="round" d="M424 126C472 113 518 120 552 146"/>
+        <path fill="#07070f" d="M578 160 604 155 606 166 582 170Z"/>
+        <path fill="none" stroke="#07070f" stroke-width="3" d="M586 168 576 178"/>
+
+        <!-- floor edge catching the light -->
+        <path fill="none" stroke="#6d55c8" stroke-width="2.5" opacity=".75" stroke-linecap="round" d="M300 282C420 281 520 280 608 278"/>
+
+        <!-- rim light along the top of the car, from the trail behind it -->
+        <path fill="none" stroke="url(#carRim)" stroke-width="3" stroke-linecap="round" d="M180 210C250 178 330 138 392 114L410 104 436 106M486 138 560 156C620 168 700 188 780 204 860 218 930 230 980 236 990 238 994 244 992 248"/>
+
+        <!-- suspension -->
+        <path fill="none" stroke="#14142a" stroke-width="5" stroke-linecap="round" d="M196 222 150 214M200 260 150 256M664 204 786 198M674 258 788 254M704 256 784 204"/>
+
+        <!-- front wing: two elements and an endplate, hung from the nose -->
+        <path fill="none" stroke="#0a0a14" stroke-width="5" d="M900 252 904 268M940 248 944 264"/>
+        <path fill="url(#carWing)" d="M826 268C880 264 940 260 992 256L994 264C940 268 884 272 828 276Z"/>
+        <path fill="#0b0b16" d="M834 278C888 276 944 273 994 270L994 277C944 280 890 283 836 286Z"/>
+        <path fill="#07070f" d="M960 244 996 242 998 290 962 292Z"/>
+        <path fill="none" stroke="url(#carRim)" stroke-width="2.5" stroke-linecap="round" d="M827 268C880 264 940 260 991 256"/>
+
+        <!-- wheels: tyre, sidewall, compound stripe, spoked rim, hub -->
+        <g class="wheel" data-c="140 228">
+          <circle cx="140" cy="228" r="66" fill="#06060b"/>
+          <circle cx="140" cy="228" r="58" fill="none" stroke="#141420" stroke-width="7"/>
+          <circle cx="140" cy="228" r="50" fill="none" stroke="#f4622c" stroke-width="2.5" opacity=".85"/>
+          <circle cx="140" cy="228" r="44" fill="url(#carHub)"/>
+          <path stroke="#3c3c58" stroke-width="4" stroke-linecap="round" d="M140 188V268M100 228H180M112 200 168 256M168 200 112 256"/>
+          <circle cx="140" cy="228" r="11" fill="#2a2a42"/>
+          <circle cx="140" cy="228" r="4" fill="#c9e84a"/>
         </g>
-        <path fill="none" stroke="#ff8a3a" stroke-width="3.5" opacity=".95" stroke-linecap="round" d="M84 190A68 68 0 0 1 134 158"/>
-        <g class="wheel" data-c="790 228">
-          <circle cx="790" cy="228" r="63" fill="#050509"/>
-          <circle cx="790" cy="228" r="35" fill="#0d0d18" stroke="#2a2a3c" stroke-width="3"/>
-          <path stroke="#3a3a52" stroke-width="4" d="M790 196V260M758 228H822M767 205 813 251M813 205 767 251"/>
-          <circle cx="790" cy="228" r="8" fill="#34344a"/>
+        <path fill="none" stroke="url(#carRim)" stroke-width="3.5" stroke-linecap="round" d="M80 200A66 66 0 0 1 132 162"/>
+        <path fill="none" stroke="#ff8a3a" stroke-width="4" opacity=".55" stroke-linecap="round" d="M108 254A40 40 0 0 0 150 266"/>
+
+        <g class="wheel" data-c="792 228">
+          <circle cx="792" cy="228" r="64" fill="#06060b"/>
+          <circle cx="792" cy="228" r="56" fill="none" stroke="#141420" stroke-width="7"/>
+          <circle cx="792" cy="228" r="48" fill="none" stroke="#f4622c" stroke-width="2.5" opacity=".85"/>
+          <circle cx="792" cy="228" r="42" fill="url(#carHub)"/>
+          <path stroke="#3c3c58" stroke-width="4" stroke-linecap="round" d="M792 190V266M754 228H830M765 201 819 255M819 201 765 255"/>
+          <circle cx="792" cy="228" r="10" fill="#2a2a42"/>
+          <circle cx="792" cy="228" r="4" fill="#c9e84a"/>
         </g>
-        <path fill="none" stroke="#7d6be0" stroke-width="3" opacity=".8" stroke-linecap="round" d="M736 196A63 63 0 0 1 786 165"/>
+        <path fill="none" stroke="#7d6be0" stroke-width="3" opacity=".85" stroke-linecap="round" d="M734 200A64 64 0 0 1 786 164"/>
+        <path fill="none" stroke="#ff8a3a" stroke-width="3.5" opacity=".45" stroke-linecap="round" d="M762 252A38 38 0 0 0 800 265"/>
       </svg>
     </div>
     <div class="word-layer"><span class="word" id="word">Steady</span></div>
@@ -85,7 +145,7 @@
       <div class="pin" id="racePin">
         <div class="race-title">
           <h1>Your PC is racing.</h1>
-          <p class="race-by">Steady</p>
+          <p class="race-by">Steady it.</p>
         </div>
         <div class="race-foot">
           <p class="lede">Steady is the calm, free task manager for Windows. It finds what's slowing you down, and holds still.</p>
@@ -374,7 +434,7 @@
 
   <noscript><p class="noscript">This page animates with JavaScript, but the download doesn't need it: <a href="https://github.com/BooRussia/steady-releases/releases/latest/download/Steady.exe">Download Steady.exe</a></p></noscript>
 
-  <script src="js/world.js?v=6" defer></script>
-  <script src="js/main.js?v=6" defer></script>
+  <script src="js/world.js?v=7" defer></script>
+  <script src="js/main.js?v=7" defer></script>
 </body>
 </html>
