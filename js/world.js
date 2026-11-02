@@ -163,9 +163,9 @@
     // logo's exact shape, and then opens out into the logo itself.
     "float jag(float x){",
     "  if(uJag<.001)return 0.;",
-    "  float a=vn(vec2(x*31.+uT*9.,4.)),b=vn(vec2(x*29.-uT*7.,6.));",
+    "  float a=vn(vec2(x*26.+uT*3.,4.)),b=vn(vec2(x*24.-uT*2.4,6.));",
     "  a*=a;b*=b;",
-    "  return uJag*((vn(vec2(x*13.+uT*5.,1.))-.5)*.15+(vn(vec2(x*47.-uT*8.,2.))-.5)*.06+(a*a-b*b)*.24);",
+    "  return uJag*((vn(vec2(x*11.+uT*1.8,1.))-.5)*.09+(vn(vec2(x*37.-uT*2.6,2.))-.5)*.025+(a*a-b*b)*.12);",
     "}",
     "float wob(float x,vec2 m){",
     "  float y=jag(x),free=1.-uExt;",
@@ -210,7 +210,7 @@
     "  float dG=mix(dF,dB,gb);",
     // The spikes take the beam's colors back by height, teal at the top through to blue at the bottom; flat stretches stay white.
     "  float jy=jag(x);",
-    "  vec3 lc=mix(cream,spectrum(clamp(.5-jy*2.6,0.,1.)),clamp(uJag*1.6,0.,1.)*smoothstep(.006,.06,abs(jy)));",
+    "  vec3 lc=mix(cream,spectrum(clamp(.5-jy*4.6,0.,1.)),clamp(uJag*1.6,0.,1.)*smoothstep(.004,.04,abs(jy)));",
     // The slope correction only holds near the line; further out the glow falls off with height, so it can't streak up the screen.
     "  float dW=max(dF,dV-.04);",
     "  float gl=(.3*exp(-dB*90.)+.075*exp(-dB*20.))*gb+(.3*exp(-mix(dW,dV,.35)*90.)+.075*exp(-dW*20.))*(1.-gb)*uAhead;",
