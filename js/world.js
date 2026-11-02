@@ -10,7 +10,7 @@
     "precision highp float;",
     "uniform vec2 uRes,uMouse,uCar,uMarkC;",
     "uniform vec3 uP1,uP2;",
-    "uniform float uMarkA,uMarkS,uThick,uSweep,uSweepOn,uAhead,uJag,uExt,uIris,uBloom,uGlint,uGlintA,uSeed,uFlash,uTouch,uFront,uPulse;",
+    "uniform float uMarkA,uMarkS,uThick,uSweep,uSweepOn,uAhead,uJag,uExt,uIris,uBloom,uGlint,uGlintA,uSeed,uFlash,uTouch;",
     "uniform float uT,uFlow,uCalm,uHead,uHills,uGlow,uLoad,uLive,uLight,uGx,uCrest,uGrow,uMouseE,uAlert,uTick,uDim;",
     "uniform sampler2D uN;",
     "float vn(vec2 x){vec2 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);return texture2D(uN,(i+f+.5)/256.).r;}",
@@ -158,23 +158,17 @@
     "  return env*(exp(-run*run)*sin(dx*30.-P.z*20.)*.8+exp(-dx*dx*26.)*cos(P.z*24.)*exp(-P.z*2.6));",
     "}",
 
-    // The beam after it collapses: one calm line, until a pulse runs in from the left and leaves
-    // the colored chaos behind it. The line then settles, writes a single heartbeat in the logo's
-    // exact shape, and opens out into the logo itself.
-    "float wake(float x){return smoothstep(uFront+.01,uFront-.3,x);}",
-    "float pulseY(float x){float g=x-uFront;return uPulse*(.075*exp(-g*g/.00014)-.045*exp(-(g+.028)*(g+.028)/.0002)+.014*exp(-(g-.042)*(g-.042)/.0005));}",
-    // True distance to the pulse's own curve, sampled, because its strokes are too steep for a vertical estimate.
-    "float pulseDist(vec2 p){",
-    "  float d=1.;",
-    "  if(uPulse<.001||abs(p.x-uFront)>.16||abs(p.y-uMarkC.y)>.25)return d;",
-    "  vec2 a=vec2(uFront-.07,uMarkC.y+pulseY(uFront-.07));",
-    "  for(int i=1;i<41;i++){float xi=uFront-.07+float(i)*.004;vec2 b=vec2(xi,uMarkC.y+pulseY(xi));d=min(d,seg(p,a,b));a=b;}",
-    "  return d;",
+    // The beam after it collapses: one white line that breaks into erratic spikes all along its
+    // length (the beam's colors come back in the spikes), settles, writes a single heartbeat in the
+    // logo's exact shape, and then opens out into the logo itself.
+    "float jag(float x){",
+    "  if(uJag<.001)return 0.;",
+    "  float a=vn(vec2(x*31.+uT*9.,4.)),b=vn(vec2(x*29.-uT*7.,6.));",
+    "  a*=a;b*=b;",
+    "  return uJag*((vn(vec2(x*13.+uT*5.,1.))-.5)*.15+(vn(vec2(x*47.-uT*8.,2.))-.5)*.06+(a*a-b*b)*.24);",
     "}",
     "float wob(float x,vec2 m){",
-    "  float y=0.,free=1.-uExt;",
-    "  if(uJag>.001)y+=uJag*wake(x)*((vn(vec2(x*13.+uT*5.,1.))-.5)*.2+(vn(vec2(x*47.-uT*8.,2.))-.5)*.07);",
-    "  if(uPulse>.001)y+=pulseY(x);",
+    "  float y=jag(x),free=1.-uExt;",
     "  y+=free*(pluck(uP1,x)+pluck(uP2,x));",
     "  float off=m.y-uMarkC.y,ox=(x-m.x)/.15;",
     "  return y+free*uTouch*off*.5*exp(-off*off*90.)*exp(-ox*ox);",
@@ -205,7 +199,8 @@
     "  vec2 a0=vec2(-8.,yL),a1=vec2(-4.,yL),a2=vec2(-1.8,4.),a3=vec2(1.4,-5.5),a4=vec2(3.6,yR),a5=vec2(8.,yR);",
     "  float dC=min(min(seg(q,a0,a1),seg(q,a1,a2)),min(seg(q,a2,a3),min(seg(q,a3,a4),seg(q,a4,a5))))*uMarkS;",
     "  float dE=min(seg(q,vec2(-900.,yL),a0),seg(q,a5,vec2(900.,yR)))*uMarkS;",
-    "  float dV=abs(P.y-uMarkC.y),dF=dV/sqrt(1.+min(ys*ys,6.));",
+    // dF approximates the distance across the line, so steep spikes keep their width and don't smear light vertically.
+    "  float dV=abs(P.y-uMarkC.y),dF=dV/sqrt(1.+min(ys*ys,60.));",
     "  float behind=smoothstep(uSweep+.002,uSweep-.002,x);",
     "  float w=uThick;",
     "  float aC=smoothstep(w+px,w-px*.5,dC),aE=smoothstep(.0016+px,.0016-px*.5,dE)*free,aF=smoothstep(w+px,w-px*.5,dF);",
@@ -213,16 +208,14 @@
     "  float dB=min(dC,mix(dE,1.,uExt));",
     "  float gb=smoothstep(uSweep+.07,uSweep-.07,x);",
     "  float dG=mix(dF,dB,gb);",
-    "  vec3 lc=mix(cream,spectrum(clamp(x*.62+.5,0.,1.)),clamp(uJag*1.6,0.,1.)*wake(x));",
-    // Near the running pulse the glow follows the true distance to its curve, so steep strokes don't smear vertically.
-    "  float pk=uPulse*exp(-pow((x-uFront)/.07,2.)),dP=pulseDist(p);",
-    "  float gl=(.3*exp(-dB*90.)+.075*exp(-dB*20.))*gb+(.3*exp(-mix(mix(dF,dV,.7),dP,pk)*90.)+.075*exp(-mix(dV,dP,pk)*20.))*(1.-gb)*uAhead;",
+    // The spikes take the beam's colors back by height, teal at the top through to blue at the bottom; flat stretches stay white.
+    "  float jy=jag(x);",
+    "  vec3 lc=mix(cream,spectrum(clamp(.5-jy*2.6,0.,1.)),clamp(uJag*1.6,0.,1.)*smoothstep(.006,.06,abs(jy)));",
+    // The slope correction only holds near the line; further out the glow falls off with height, so it can't streak up the screen.
+    "  float dW=max(dF,dV-.04);",
+    "  float gl=(.3*exp(-dB*90.)+.075*exp(-dB*20.))*gb+(.3*exp(-mix(dW,dV,.35)*90.)+.075*exp(-dW*20.))*(1.-gb)*uAhead;",
     "  gl*=1.-.8*uExt;",
     "  col+=lc*gl*uMarkA;",
-    "  if(uPulse>.001){",
-    "    float g=(x-uFront)/.045;vec2 hd=(p-vec2(uFront,uMarkC.y+.03*uPulse))/vec2(.06,.05);",
-    "    col+=mix(cream,spectrum(clamp(x*.62+.5,0.,1.)),.35)*(exp(-g*g)*exp(-dP*70.)*.9+exp(-dot(hd,hd))*.16)*uPulse*uMarkA;",
-    "  }",
     "  if(uBloom>.001)col+=spectrum(clamp(.5-q.y/11.,0.,1.))*exp(-dC*13.)*exp(-q.x*q.x/130.)*uBloom*.55*gb*uMarkA;",
     "  if(uSweepOn>.001){",
     "    float tt=uSweep-x,dT=min(dC,dE);",
@@ -599,8 +592,6 @@
       sky.uniform1f(u.uSeed, st.mSeed);
       sky.uniform1f(u.uFlash, st.mFlash);
       sky.uniform1f(u.uTouch, st.mTouch);
-      sky.uniform1f(u.uFront, st.mFront);
-      sky.uniform1f(u.uPulse, st.mPulse);
       sky.uniform3f(u.uP1, st.p1.x, st.p1.a, st.p1.t);
       sky.uniform3f(u.uP2, st.p2.x, st.p2.a, st.p2.t);
       sky.uniform1f(u.uGlow, st.glow);
