@@ -10,7 +10,7 @@
     "precision highp float;",
     "uniform vec2 uRes,uMouse,uCar,uMarkC;",
     "uniform vec3 uP1,uP2;",
-    "uniform float uMarkA,uMarkS,uThick,uSweep,uSweepOn,uAhead,uJag,uFlat,uDip,uBloom,uGlint,uGlintA,uSeed,uFlash,uTouch;",
+    "uniform float uMarkA,uMarkS,uThick,uSweep,uSweepOn,uAhead,uJag,uDip,uDrain,uBloom,uGlint,uGlintA,uSeed,uFlash,uTouch;",
     "uniform vec4 uDrop,uSplash;",
     "uniform vec3 uTail;",
     "uniform float uT,uFlow,uCalm,uHead,uHills,uGlow,uLoad,uLive,uLight,uGx,uCrest,uGrow,uMouseE,uAlert,uTick,uDim;",
@@ -150,7 +150,7 @@
 
     // The beam after it collapses: one white line that breaks into erratic spikes all along its
     // length (the beam's colors come back in the spikes), settles, and writes a single heartbeat in
-    // the logo's exact shape. Its flat ends then fade, and a drop gathers at the bottom of the beat.
+    // the logo's exact shape. The beat then slides right, and a drop gathers at the bottom of it and takes in its colors.
     "float jag(float x){",
     "  if(uJag<.001)return 0.;",
     "  float a=vn(vec2(x*26.+uT*3.,4.)),b=vn(vec2(x*24.-uT*2.4,6.));",
@@ -178,19 +178,26 @@
     "  float dV=abs(P.y-uMarkC.y),dF=dV/sqrt(1.+min(ys*ys,60.));",
     "  float behind=smoothstep(uSweep+.002,uSweep-.002,x);",
     "  float w=uThick;",
-    "  float aC=smoothstep(w+px,w-px*.5,dC),aE=smoothstep(.0016+px,.0016-px*.5,dE)*uFlat,aF=smoothstep(w+px,w-px*.5,dF);",
+    "  float aC=smoothstep(w+px,w-px*.5,dC),aE=smoothstep(.0016+px,.0016-px*.5,dE),aF=smoothstep(w+px,w-px*.5,dF);",
     "  float aL=max(max(aC,aE)*behind,aF*(1.-behind)*uAhead);",
-    "  float dB=min(dC,mix(1.,dE,uFlat));",
+    "  float dB=min(dC,dE);",
     "  float gb=smoothstep(uSweep+.07,uSweep-.07,x);",
     "  float dG=mix(dF,dB,gb);",
     // The spikes take the beam's colors back by height, teal at the top through to blue at the bottom; flat stretches stay white.
     "  float jy=jag(x);",
     "  vec3 lc=mix(cream,spectrum(clamp(.5-jy*4.6,0.,1.)),clamp(uJag*1.6,0.,1.)*smoothstep(.004,.04,abs(jy)));",
+    // As the drop forms, the colors around the beat pull in toward the bottom of it, and beads of
+    // color run down the line into the drop.
+    "  vec2 tq=q-a3;",
+    "  float tt=dot(tq,tq),tr=60.*pow(.015,uDrain);",
+    "  vec3 sp=spectrum(clamp(.5-q.y/11.,0.,1.));",
+    "  float run=pow(.5+.5*sin(sqrt(tt)*1.1+uT*8.),6.)*smoothstep(0.,.15,uDrain)*smoothstep(1.,.8,uDrain)*exp(-tt/(tr*tr*2.+30.))*uBloom;",
+    "  lc=mix(lc,sp*1.25,clamp(run,0.,1.));",
     // The slope correction only holds near the line; further out the glow falls off with height, so it can't streak up the screen.
     "  float dW=max(dF,dV-.04);",
     "  float gl=(.3*exp(-dB*90.)+.075*exp(-dB*20.))*gb+(.3*exp(-mix(dW,dV,.35)*90.)+.075*exp(-dW*20.))*(1.-gb)*uAhead;",
     "  col+=lc*gl*uMarkA;",
-    "  if(uBloom>.001)col+=spectrum(clamp(.5-q.y/11.,0.,1.))*exp(-dC*13.)*exp(-q.x*q.x/130.)*uBloom*.55*gb*uMarkA;",
+    "  if(uBloom>.001)col+=sp*exp(-dC*13.)*exp(-q.x*q.x/130.)*exp(-tt/(tr*tr))*(1.+1.5*uDrain)*uBloom*.55*gb*uMarkA;",
     "  if(uSweepOn>.001){",
     "    float tt=uSweep-x,dT=min(dC,dE);",
     "    float tail=exp(-max(tt,0.)*4.2)*smoothstep(-.03,.03,tt);",
@@ -212,8 +219,9 @@
     "  return dot(p,vec2(a,b))-r1;",
     "}",
 
-    // The drop: it hangs from the bottom of the beat on a narrowing neck, lets go, falls with a faint
-    // trail, and lands on the hill where the seed is. A few droplets kick up, and the seed starts to glow.
+    // The drop: it hangs from the bottom of the beat on a narrowing neck and takes in the beat's colors,
+    // lets go, falls with a faint trail, and lands on the hill where the seed is. A few droplets kick up,
+    // and the seed starts to glow.
     "vec3 drip(vec3 col,vec2 p){",
     "  float px=1./uRes.y;",
     "  vec3 cream=vec3(1.,.953,.894);",
@@ -221,35 +229,42 @@
     "    vec2 d=p-uDrop.xy;",
     "    float r=uDrop.z,sd=tear(d,r,uTail.y,uTail.x);",
     "    float fl=max(sd,0.);",
-    "    col+=cream*(exp(-fl*150.)*.5+exp(-fl*32.)*.14)*uDrop.w;",
+    // Its glow and trail carry the colors it took in: teal above it and blue below, as on the beat.
+    "    vec3 gc=mix(cream,spectrum(clamp(.5-d.y/(r*7.),0.,1.)),uDrain*.85);",
+    "    col+=gc*(exp(-fl*150.)*.5+exp(-fl*32.)*(.14+.12*uDrain))*uDrop.w;",
     "    if(uTail.z>.001){",
     "      float ty=d.y/uTail.z;",
-    "      col+=cream*exp(-d.x*d.x/(r*r*.12))*smoothstep(0.,.08,ty)*pow(max(1.-ty,0.),2.)*.3*uDrop.w;",
-    "      float gy=uDrop.y-uCrest;",
-    "      vec2 g=(p-vec2(uDrop.x,uCrest))*vec2(1.,4.);",
-    "      col+=vec3(.86,.92,.55)*exp(-dot(g,g)*900.)*smoothstep(.16,0.,gy)*.25*uDrop.w;",
+    "      col+=gc*exp(-d.x*d.x/(r*r*.12))*smoothstep(0.,.08,ty)*pow(max(1.-ty,0.),2.)*.3*uDrop.w;",
+    "      float gy=uCrest-(1.-uHills)*1.05;",
+    "      vec2 g=(p-vec2(uDrop.x,gy))*vec2(1.,4.);",
+    "      col+=vec3(.86,.92,.55)*exp(-dot(g,g)*900.)*smoothstep(.16,0.,uDrop.y-gy)*.25*uDrop.w;",
     "    }",
     // A lens: brighter at the rim and toward the bottom, with a small cool highlight up and to the left.
+    // Once it has the colors they sit in it by height and swirl slowly.
     "    vec2 hl=d-vec2(-.32,.3)*r;",
-    "    vec3 body=cream*(.78+.22*smoothstep(-r*.4,r,-d.y))+vec3(.95,.98,1.)*exp(-dot(hl,hl)/(r*r*.035))*.55;",
-    "    body+=cream*.18*smoothstep(-r*.45,0.,sd);",
+    "    float rim=smoothstep(-r*.45,0.,sd);",
+    "    vec3 body=cream*(.78+.22*smoothstep(-r*.4,r,-d.y)+.18*rim);",
+    "    vec3 ink=spectrum(clamp(.5-d.y/(r*2.4)+.07*sin(atan(d.y,d.x+1e-5)*2.+uT*2.5),0.,1.))*(.95+.35*rim);",
+    "    body=mix(body,ink,uDrain)+vec3(.95,.98,1.)*exp(-dot(hl,hl)/(r*r*.035))*.55;",
     "    col=mix(col,body,smoothstep(px,-px*.5,sd)*uDrop.w);",
     "  }",
     "  if(uSplash.w>.001){",
     "    float t=uSplash.z,fade=1.-t;",
     "    vec2 c=uSplash.xy;",
+    "    vec3 sc=mix(cream,spectrum(.3),uDrain*.4);",
     "    vec2 e=(p-c)*vec2(1.,5.5);",
-    "    col+=cream*exp(-dot(e,e)*2600.)*fade*fade*1.3*uSplash.w;",
+    "    col+=sc*exp(-dot(e,e)*2600.)*fade*fade*1.3*uSplash.w;",
     "    float ring=abs(length(e)-.055*pow(t,.55));",
-    "    col+=cream*exp(-ring*260.)*fade*fade*.45*uSplash.w*step(c.y-.012,p.y);",
+    "    col+=sc*exp(-ring*260.)*fade*fade*.45*uSplash.w*step(c.y-.012,p.y);",
     "    for(int i=0;i<6;i++){",
     "      float fi=float(i),sx=fi<3.?-1.:1.,k=mod(fi,3.);",
     "      vec2 v=vec2(sx*(.016+k*.014)*(sx>0.?1.15:1.),(.05-k*.012)*(sx>0.?.84:1.));",
     "      vec2 o=c+vec2(v.x*t,v.y*t-.058*t*t);",
     "      float rd=.0023*(1.-.55*t)*(1.-.18*k),dd=length(p-o);",
     "      float on=step(c.y-.002,o.y)*fade;",
-    "      col+=cream*exp(-max(dd-rd,0.)*220.)*.3*on*uSplash.w;",
-    "      col=mix(col,cream,smoothstep(rd+px,rd-px*.5,dd)*on*uSplash.w);",
+    "      vec3 dc=mix(cream,spectrum(.08+fi*.17),uDrain);",
+    "      col+=dc*exp(-max(dd-rd,0.)*220.)*.3*on*uSplash.w;",
+    "      col=mix(col,dc,smoothstep(rd+px,rd-px*.5,dd)*on*uSplash.w);",
     "    }",
     "  }",
     "  if(uSeed>.001){float ds=length(p-uSplash.xy);col+=vec3(.82,.95,.32)*(exp(-ds*110.)*.9+exp(-ds*24.)*.2)*uSeed;}",
@@ -612,7 +627,7 @@
       sky.uniform1f(u.uSweepOn, st.mSweepOn);
       sky.uniform1f(u.uAhead, st.mAhead);
       sky.uniform1f(u.uJag, st.mJag);
-      sky.uniform1f(u.uFlat, st.mFlat);
+      sky.uniform1f(u.uDrain, st.mDrain);
       sky.uniform1f(u.uDip, st.mDip);
       sky.uniform4f(u.uDrop, st.drop[0], st.drop[1], st.drop[2], st.drop[3]);
       sky.uniform3f(u.uTail, st.tail[0], st.tail[1], st.tail[2]);

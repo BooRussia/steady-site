@@ -130,39 +130,50 @@
     var asp = vw / vh;
 
     // the quiet: the beam thins to one white line, the whole line breaks into colored spikes,
-    // they settle, and one beat is written across the dark. The beat then slides up over the hill,
-    // a drop gathers at the bottom of it, lets go, and lands where the seed is
+    // they settle, and one beat is written across the dark. The beat slides right, over the spot
+    // where the tree will grow, and a drop gathers at the bottom of it and takes in its colors.
+    // The view follows the drop down until it lands where the seed is
     var edge = sm(0, .92, calm);
     var chaos = sm(.05, .1, h) * (1 - sm(.17, .27, h));
-    var pull = sm(.52, .62, h), form = clamp((h - .58) / .1), fall = clamp((h - .68) / .14), land = clamp((h - .82) / .07);
+    var pull = sm(.5, .6, h), form = clamp((h - .58) / .12), fall = clamp((h - .7) / .16), land = clamp((h - .86) / .07);
     var mS = Math.min(.034, .8 * vw / (16 * vh));
-    var seedX = (treeX - .5) * asp, liftY = wide ? .2 : .17;
+    var seedX = (treeX - .5) * asp;
+    var dropR = clamp(mS * .36, .0085, .0122), lineW = .0016;
+    var neck = dropR * mix(.5, 2.8, sm(.25, 1, form));
+    var dip = h < .7 ? .7 * sm(.2, 1, form) : .7 * Math.cos(fall * 26) * Math.exp(-fall * 9);
+    // where the drop hangs when it lets go, before the view moves
+    var hang = -(5.5 + .7) * mS - dropR * 2.8;
+    // The view eases down until the hanging drop is mid-screen, then falls with it, keeping it there.
+    // Near the end it slows to a stop as the hill comes up, and the drop falls the last stretch onto it.
+    var fallD = 1.05 - crest - dropR;
+    var track = fallD * fall * fall;
+    if (fall > .7) {
+      var fu = (fall - .7) / .3, f2 = fu * fu, f3 = f2 * fu;
+      track = (2 * f3 - 3 * f2 + 1) * fallD * .49 + (f3 - 2 * f2 + fu) * fallD * .42 + (3 * f2 - 2 * f3) * 1.05;
+    }
+    var cam = -hang * sm(.64, .7, h) + track;
     // the bottom of the beat (1.4, -5.5 in the logo's units) ends up straight above the seed
     var mCx = mix(0, seedX - 1.4 * mS, pull);
-    var mCy = mix(0, liftY, pull);
-    var dip = h < .68 ? .7 * sm(.2, 1, form) : .7 * Math.cos(fall * 26) * Math.exp(-fall * 9);
-    var dropR = clamp(mS * .3, .0075, .0105), lineW = .0016;
-    var neck = dropR * mix(.5, 2.8, sm(.25, 1, form)), hangY = liftY - (5.5 + .7) * mS;
+    var mCy = cam;
     var drop, tail;
-    if (h < .68) {
+    if (h < .7) {
       var bead = dropR * mix(.35, 1, sm(0, .8, form));
       drop = [mCx + 1.4 * mS, mCy - (5.5 + dip) * mS - neck, bead, sm(0, .12, form)];
       tail = [neck, lineW, 0];
     } else {
-      var y0 = hangY - neck, sn = sm(0, .12, fall);
-      drop = [seedX, mix(y0, crest + dropR, fall * fall), dropR, h < .82 ? 1 : 0];
-      tail = [mix(neck, dropR * (1.4 + 1.6 * fall), sn), mix(lineW, dropR * .14, sm(0, .06, fall)), dropR * 16 * fall];
+      drop = [seedX, hang - fallD * fall * fall + cam, dropR, h < .86 ? 1 : 0];
+      tail = [mix(neck, dropR * (1.4 + 1.6 * fall), sm(0, .12, fall)), mix(lineW, dropR * .14, sm(0, .06, fall)), dropR * 16 * fall];
     }
     var sweepT = clamp((h - .28) / .16);
     var sweepE = mix(sweepT, .5 + 4 * Math.pow(sweepT - .5, 3), .6);
     var sweepX = sweepT <= 0 ? -9 : (sweepT >= 1 ? 9 : mix(-asp * .5 - .1, asp * .5 + .55, sweepE));
     var sweepOn = bell(0, .02, .97, 1, sweepT);
-    var mA = sm(.82, .93, edge) * (1 - sm(.74, .84, h));
+    var mA = sm(.82, .93, edge) * (1 - sm(.8, .84, h));
     lineFree = mA > .5 && h < .56 && y >= M.quiet.top - vh;
     lineY = (.5 - mCy) * vh;
     plucks.forEach(function (pl) { pl.t = Math.min(pl.t + dt, 9); });
 
-    var grow = sm(.85, .93, h) * mix(.05, .9, g);
+    var grow = sm(.88, .95, h) * mix(.05, .9, g);
     grow = mix(grow, 1, sm(.02, .46, f));
     var light = mix(mix(.06, .46, sm(0, 1, g)), 1, sm(.02, .48, f));
 
@@ -172,16 +183,16 @@
         mx: ptr.x, my: ptr.y, mE: ptr.e,
         calm: calm, head: head, carU: carU, carV: carV,
         dim: 1 - .5 * bell(.0, .07, .62, .92, b),
-        hills: sm(.6, .8, h),
+        hills: clamp(1 - (1.05 - hang - cam) / 1.05),
         mA: mA, mS: mS, mCx: mCx, mCy: mCy,
         mThick: lineW,
         mSweep: sweepX, mSweepOn: sweepOn, mAhead: mix(1, .42, sm(.25, .29, h)),
         mJag: reduce ? chaos * .4 : Math.max(chaos, rush * .2) * (1 - sm(.54, .58, h)),
-        mFlat: 1 - sm(.62, .72, h), mDip: dip,
+        mDip: dip, mDrain: sm(.6, .7, h),
         drop: drop, tail: tail, splash: [seedX, crest, land, land > 0 && land < 1 ? 1 : 0],
-        mBloom: bell(.36, .42, .5, .58, h),
+        mBloom: sm(.36, .42, h) * (1 - sm(.68, .72, h)),
         mGlint: -(asp * .5 + .15) + (t * .62) % (asp + .3), mGlintA: reduce ? 0 : bell(.44, .46, .52, .54, h),
-        mSeed: bell(.82, .85, .92, .98, h),
+        mSeed: bell(.86, .89, .95, .99, h),
         mFlash: sweepOn * Math.exp(-(sweepX / .3) * (sweepX / .3)),
         mTouch: reduce ? 0 : 1 - sm(.54, .58, h),
         p1: plucks[0], p2: plucks[1],
@@ -216,9 +227,9 @@
     if (hint) hint.style.setProperty("--hint", reduce ? 1 : (.5 + .5 * Math.sin(t * 2)).toFixed(3));
 
     quietSettle.style.opacity = bell(.16, .195, .245, .275, h);
-    var lineOn = bell(.84, .88, .97, 1, h);
+    var lineOn = bell(.88, .92, .98, 1, h);
     quietLine.style.opacity = lineOn;
-    quietLine.style.transform = "translateY(" + ((1 - sm(.84, .9, h)) * 14).toFixed(1) + "px)";
+    quietLine.style.transform = "translateY(" + ((1 - sm(.88, .93, h)) * 14).toFixed(1) + "px)";
     quietSub.style.opacity = lineOn * .9;
 
     // one chapter at a time: each one comes into focus as it reaches the middle
