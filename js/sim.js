@@ -280,7 +280,7 @@
       '<div class="sim-menu">Menu</div><nav class="sim-nav" aria-label="Steady pages">' +
       NAV.map(function (n) { return '<button type="button" data-go="' + n[0] + '">' + ic(n[1]) + '<span>' + n[2] + '</span>' + (n[0] === "alerts" ? '<span class="sim-badge" data-k="badge"></span>' : "") + "</button>"; }).join("") +
       '</nav><div class="sim-foot"><div class="sim-foot-row"><button type="button" class="sim-set" data-go="settings">' + ic("gear") + '<span>Settings</span></button>' +
-      '<button type="button" class="sim-upd" data-act="update" title="Steady 1.2.1 — click to check for updates" aria-label="Check for updates">' + ic("sync") + "</button></div>" +
+      '<button type="button" class="sim-upd" data-act="update" title="Steady 1.3.0 — click to check for updates" aria-label="Check for updates">' + ic("sync") + "</button></div>" +
       '<div class="sim-meters">' + meter("CPU", "cpu", "var(--s-cpu)") + meter("Memory", "mem", "var(--s-mem)") + meter("GPU", "gpu", "var(--s-gpu)") + "</div></div></aside>" +
       '<main class="sim-main" data-k="main"></main></div>' +
       '<div class="sim-toast" data-k="toast" role="status" aria-live="polite"><b></b><p></p></div></div>';
@@ -812,7 +812,7 @@
       case "update":
         if (t.classList.contains("busy")) break;
         t.classList.add("busy");
-        later(function () { t.classList.remove("busy"); toast("Steady 1.2.1 is up to date", "Steady checks GitHub every time it starts, and the update button turns blue when there's something new."); }, reduce ? 200 : 1300);
+        later(function () { t.classList.remove("busy"); toast("Steady 1.3.0 is up to date", "Steady checks GitHub every time it starts, and the update button turns blue when there's something new."); }, reduce ? 200 : 1300);
         break;
       // storage
       case "drive": S.drive = t.getAttribute("data-d"); S.view = "folders"; renderDrives(); if (!S.scanned[S.drive]) scan(S.drive); else renderList(); break;
