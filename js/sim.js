@@ -226,19 +226,21 @@
     alerts = alertList();
     hist = { cpu: [], mem: [], gpu: [], dc: [], dd: [], down: [], up: [], cores: [] };
     for (var i = 0; i < 16; i++) hist.cores.push([]);
-    sys = { cpu: 0, mem: 0, gpu: 0, cores: [], read: 0, write: 0, dc: 0, dd: 0, down: 0, up: 0, share: 86, uptime: 323 * 60 };
+    sys = { cpu: 0, mem: 17700, gpu: 34, cores: [], read: .5, write: 2.5, dc: 5, dd: .5, down: 2, up: .3, share: 86, uptime: 323 * 60 };
     for (var k = 0; k < 60; k++) step(1);
   }
 
+  // Live data drifts rather than jumps: slow random walks, then the same display smoothing the app uses.
+  function walk(v, keep, kick) { return v * keep + (Math.random() - .5) * kick; }
   function step(dt) {
     var tot = 0, gsum = 0, dsum = 0, msum = 0;
     apps.forEach(function (a) {
       if (a.ended) return;
-      a.nz = noise(a.nz);
-      var surge = a.id === "firefox" && Math.random() < .07 ? 1.55 : 1;
-      var cpu = Math.max(0, a.cpu * (1 + .3 * a.nz) * surge), gpu = Math.max(0, a.gpu * (1 + .22 * a.nz));
-      var disk = a.disk ? a.disk * (Math.random() < .25 ? 1.7 : .35 + Math.random() * .9) : (Math.random() < .03 ? .2 : 0);
-      a.m = a.mem * (1 + .012 * a.nz);
+      a.nz = walk(a.nz, .9, .16);
+      a.dz = walk(a.dz || 0, .88, .2);
+      var cpu = Math.max(0, a.cpu * (1 + .5 * a.nz)), gpu = Math.max(0, a.gpu * (1 + .4 * a.nz));
+      var disk = a.disk ? Math.max(0, a.disk * (1 + 1.2 * a.dz)) : 0;
+      a.m = a.mem * (1 + .01 * a.nz);
       if (a.c == null) { a.c = cpu; a.g = gpu; a.d = disk; a.rk = 0; a.rc = cpu; a.rg = gpu; a.rd = disk; }
       var aD = 1 - Math.exp(-dt / 2), aR = 1 - Math.exp(-dt / 8);
       a.c += (cpu - a.c) * aD; a.g += (gpu - a.g) * aD; a.d += (disk - a.d) * aD;
@@ -246,21 +248,29 @@
       var raw = cpu + gpu * .6 + a.m * 100 / MEM_TOTAL * .8 + Math.min(disk, 50) * .3;
       a.rk = a.rk ? a.rk + (raw - a.rk) * aR : raw;
       if (a.c >= .5 || a.g >= 1 || a.m >= 100 || a.d >= .5) a.busy = 0; else a.busy = (a.busy || 0) + dt;
-      if (!a.helper || S.helpers) { tot += cpu; gsum += gpu; dsum += disk; msum += a.m; }
+      if (!a.helper || S.helpers) { tot += a.c; gsum += a.g; dsum += a.d; msum += a.m; }
     });
-    sys.nz = noise(sys.nz || 0);
-    var winCpu = 6.4 + 1.6 * sys.nz;
-    sys.cpu = clamp(tot + winCpu, 1, 100);
+    var k = sys.cpu ? 1 - Math.exp(-dt / 1.5) : 1;
+    sys.nz = walk(sys.nz || 0, .9, .14);
+    var winCpu = 6.4 + 1.2 * sys.nz;
+    sys.cpu += (clamp(tot + winCpu, 1, 100) - sys.cpu) * k;
     sys.share = Math.round(tot * 100 / (tot + winCpu));
+    if (!sys.bias) { sys.bias = []; sys.drift = []; for (var b = 0; b < 16; b++) { sys.bias.push(.65 + Math.random() * .7 + (b === 3 ? .35 : 0)); sys.drift.push(0); } }
     sys.cores = [];
-    for (var i = 0; i < 16; i++) { var c = clamp(sys.cpu * (.55 + Math.random() * .9) + (i === 3 ? 18 : 0), 2, 99); sys.cores.push(c); push(hist.cores[i], c); }
-    sys.mem = msum + 10950 + 60 * sys.nz;
-    sys.gpu = clamp(gsum * 1.1 + 13 + 2 * sys.nz, 0, 100);
-    sys.read = dsum * .18 + Math.random() * .4; sys.write = dsum * .9 + Math.random() * 1.2;
-    sys.dc = clamp(dsum * 1.05 + Math.random() * 2.4, 0, 100);
-    sys.dd = Math.random() < .2 ? Math.random() * 4 : Math.random() * .6;
-    sys.down = clamp(1.8 * (.6 + Math.random()) + (apps[2].ended ? 0 : .6), 0, 50); sys.up = .31 * (.6 + Math.random());
-    sys.mhz = 5180 + Math.round((Math.random() - .5) * 120);
+    for (var i = 0; i < 16; i++) {
+      sys.drift[i] = walk(sys.drift[i], .85, .22);
+      var c = clamp(sys.cpu * (sys.bias[i] + sys.drift[i]), 2, 99);
+      sys.cores.push(c); push(hist.cores[i], c);
+    }
+    sys.mem += (msum + 10950 + 40 * sys.nz - sys.mem) * k;
+    sys.gpu += (clamp(gsum * 1.1 + 13 + 1.5 * sys.nz, 0, 100) - sys.gpu) * k;
+    sys.read += (dsum * .18 + .2 - sys.read) * k; sys.write += (dsum * .9 + .5 - sys.write) * k;
+    sys.dc += (clamp(dsum * 1.05 + 1.2, 0, 100) - sys.dc) * k;
+    sys.ddz = walk(sys.ddz || 0, .9, .3);
+    sys.dd += (Math.max(0, .5 + sys.ddz * 2) - sys.dd) * k;
+    sys.netz = walk(sys.netz || 0, .88, .3);
+    sys.down += (clamp(2.1 + 1.6 * sys.netz + (apps[2].ended ? -.5 : 0), .2, 50) - sys.down) * k; sys.up += (Math.max(.05, .31 + .2 * sys.netz) - sys.up) * k;
+    sys.mhz = 5180 + Math.round(sys.nz * 60);
     sys.uptime += dt;
     push(hist.cpu, sys.cpu); push(hist.mem, sys.mem * 100 / MEM_TOTAL); push(hist.gpu, sys.gpu); push(hist.dc, sys.dc); push(hist.dd, sys.dd); push(hist.down, sys.down); push(hist.up, sys.up);
     S.sinceSort += dt;
