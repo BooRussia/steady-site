@@ -7,6 +7,8 @@
   if (!root || !root.querySelector || !window.requestAnimationFrame) return;
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var W = 1220, H = 790, MEM_TOTAL = 31.2 * 1024;
+  var ICONS = [["ember", "Ember pulse"], ["midnight", "Midnight"], ["lime", "Lime on black"], ["limetile", "Lime tile"], ["dusk", "Dusk"], ["beam", "Single beam"], ["teal", "Teal calm"],
+    ["mono", "Mono"], ["ring", "Ring"], ["dot", "Heartbeat dot"], ["sunrise", "Sunrise"], ["liquid", "Liquid level"], ["softbeam", "Soft beam"], ["spectrum", "Spectrum"]];
   var CPU_MODEL = "AMD Ryzen 7 7700 8-Core Processor", GPU_MODEL = "NVIDIA GeForce RTX 4070";
 
   // ---------- helpers ----------
@@ -219,7 +221,7 @@
   function later(fn, ms) { var t = setTimeout(fn, ms); timers.push(t); return t; }
   function reset() {
     timers.forEach(clearTimeout); timers = [];
-    S = { page: "programs", speed: 1, reorder: 5, hideIdle: true, helpers: false, frozen: false, hover: false, sort: "impact", q: "", sinceSort: 0, popups: true, autoUpd: true, widget: true, perm: false, view: "folders", drive: "C", scanned: {}, scanning: null, trusted: [], binItems: 212, open: {} };
+    S = { page: "programs", speed: 1, reorder: 5, hideIdle: true, helpers: false, frozen: false, hover: false, sort: "impact", q: "", sinceSort: 0, popups: true, autoUpd: true, widget: true, perm: false, view: "folders", drive: "C", scanned: {}, scanning: null, trusted: [], binItems: 212, open: {}, icon: "ember" };
     apps = appList();
     drives = { C: { root: driveC(), total: 1863, label: "Local Disk", sys: true, path: [], held: 1.4 }, D: { root: driveD(), total: 931.5, label: "Games", path: [], held: 0 } };
     drivers = driverList();
@@ -272,9 +274,9 @@
   function frame() {
     root.innerHTML =
       '<div class="sim-win" role="application" aria-label="A working demo of the Steady app with made-up data">' +
-      '<div class="sim-title"><img src="img/apps/steady.png" alt="">Steady<div class="caps"><span>' + ic("min") + '</span><span>' + ic("max") + '</span><span>' + ic("x") + '</span></div></div>' +
+      '<div class="sim-title"><img data-k="appicon" src="img/icons/' + S.icon + '.svg" alt="">Steady<div class="caps"><span>' + ic("min") + '</span><span>' + ic("max") + '</span><span>' + ic("x") + '</span></div></div>' +
       '<div class="sim-body"><aside class="sim-side">' +
-      '<div class="sim-brand"><img src="img/apps/steady.png" alt=""><div><b>Steady</b><small>Calm task manager</small></div></div>' +
+      '<div class="sim-brand"><img data-k="appicon" src="img/icons/' + S.icon + '.svg" alt=""><div><b>Steady</b><small>Calm task manager</small></div></div>' +
       '<div class="sim-menu">Menu</div><nav class="sim-nav" aria-label="Steady pages">' +
       NAV.map(function (n) { return '<button type="button" data-go="' + n[0] + '">' + ic(n[1]) + '<span>' + n[2] + '</span>' + (n[0] === "alerts" ? '<span class="sim-badge" data-k="badge"></span>' : "") + "</button>"; }).join("") +
       '</nav><div class="sim-foot"><div class="sim-foot-row"><button type="button" class="sim-set" data-go="settings">' + ic("gear") + '<span>Settings</span></button>' +
@@ -781,6 +783,8 @@
         '<div class="sim-cap">Alerts</div><div class="sim-card sim-setcard">' +
         row("Pop up a notice for new alerts", "Shows a small notice and flashes the taskbar button when something suspicious starts.", tog("popups", S.popups)) +
         row("Trusted items", "Things you marked “I trust this” are never flagged. Reset to see every alert again.", '<button type="button" class="sim-btn" data-act="resettrust">Reset trusted items</button>') + "</div>" +
+        '<div class="sim-cap">App icon</div><div class="sim-card sim-setcard"><div class="sim-setrow"><div><b>Pick Steady\'s icon</b><p>It\'s used for this window, the taskbar button, and Steady\'s desktop, Start menu and taskbar shortcuts.</p></div></div>' +
+        '<div class="sim-icons" role="group" aria-label="App icon">' + ICONS.map(function (o) { return '<button type="button" class="sim-icon" data-act="icon" data-v="' + o[0] + '" aria-pressed="' + (S.icon === o[0]) + '"><img src="img/icons/' + o[0] + '.svg" alt="" width="44" height="44"><span>' + o[1] + "</span></button>"; }).join("") + "</div></div>" +
         '<div class="sim-cap">Taskbar widget and updates</div><div class="sim-card sim-setcard">' +
         row("Show the taskbar widget", "Little liquid orbs next to the clock fill up as your PC gets busier.", tog("widget", S.widget)) +
         row("Install updates automatically", "Steady checks GitHub when it starts, verifies the download's SHA-256, and installs it. Turn off to use the blue update button instead.", tog("autoupd", S.autoUpd)) + "</div>";
@@ -878,6 +882,11 @@
       case "widget": S.widget = !S.widget; t.setAttribute("aria-pressed", S.widget); if (S.widget) toast("Taskbar widget on", "On a real PC, three small orbs sit next to the clock."); break;
       case "autoupd": S.autoUpd = !S.autoUpd; t.setAttribute("aria-pressed", S.autoUpd); break;
       case "resettrust": S.trusted = []; toast("Trusted items reset", "Every alert will show again."); break;
+      case "icon":
+        S.icon = t.getAttribute("data-v"); pressSeg(t);
+        $$('[data-k="appicon"]').forEach(function (im) { im.src = "img/icons/" + S.icon + ".svg"; });
+        toast("Icon changed to " + t.querySelector("span").textContent, "Steady's window, taskbar button and shortcuts use it now.", "var(--s-ok)");
+        break;
     }
     if (act === "hideidle" && S.page === "settings") t.setAttribute("aria-pressed", S.hideIdle);
   });

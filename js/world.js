@@ -138,17 +138,9 @@
 
     "float seg(vec2 p,vec2 a,vec2 b){vec2 pa=p-a,ba=b-a;return length(pa-ba*clamp(dot(pa,ba)/dot(ba,ba),0.,1.));}",
 
-    // Same stops as img/logo.svg.
-    "vec3 logoGrad(float t){",
-    "  vec3 n=vec3(.153,.294,.459),n2=vec3(.114,.208,.337),a=vec3(.165,.502,.533),b=vec3(.973,.663,.227),c=vec3(.933,.306,.137),d=vec3(.518,.275,.643);",
-    "  if(t<.22)return n;",
-    "  if(t<.33)return mix(n,a,(t-.22)/.11);",
-    "  if(t<.46)return mix(a,b,(t-.33)/.13);",
-    "  if(t<.57)return mix(b,c,(t-.46)/.11);",
-    "  if(t<.69)return mix(c,d,(t-.57)/.12);",
-    "  if(t<.82)return mix(d,n,(t-.69)/.13);",
-    "  return mix(n,n2,(t-.82)/.18);",
-    "}",
+    // Same colours as img/logo.svg ("Ember pulse"): a navy tile, darker at the bottom, and a pulse that warms from amber to coral.
+    "vec3 logoGrad(float t){return mix(vec3(.133,.259,.420),vec3(.078,.153,.259),clamp(t,0.,1.));}",
+    "vec3 ember(float t){return mix(vec3(1.,.761,.302),vec3(.933,.306,.137),clamp(t,0.,1.));}",
 
     // A plucked line: a ripple running out both ways, plus a wobble where it was touched.
     "float pluck(vec3 P,float x){",
@@ -192,7 +184,7 @@
     "    float iris=smoothstep(uIris,uIris-3.,r);",
     "    float pxu=px/uMarkS;",
     "    float halo=exp(-max(dt,0.)*uMarkS*10.)*smoothstep(uIris*2.6,uIris*1.1,r);",
-    "    col+=spectrum(clamp(v,0.,1.))*halo*.36*(1.+.12*sin(uT*1.6));",
+    "    col+=ember(1.-v)*halo*.3*(1.+.12*sin(uT*1.6));",
     "    col=mix(col,logoGrad(gt),smoothstep(pxu,-pxu,dt)*iris);",
     "  }",
     "  float yL=-uExt,yR=.2*uExt;",
@@ -210,7 +202,9 @@
     "  float dG=mix(dF,dB,gb);",
     // The spikes take the beam's colors back by height, teal at the top through to blue at the bottom; flat stretches stay white.
     "  float jy=jag(x);",
+    "  vec3 warm=ember((q.x+8.)/16.);",
     "  vec3 lc=mix(cream,spectrum(clamp(.5-jy*4.6,0.,1.)),clamp(uJag*1.6,0.,1.)*smoothstep(.004,.04,abs(jy)));",
+    "  lc=mix(lc,warm,uExt);",
     // The slope correction only holds near the line; further out the glow falls off with height, so it can't streak up the screen.
     "  float dW=max(dF,dV-.04);",
     "  float gl=(.3*exp(-dB*90.)+.075*exp(-dB*20.))*gb+(.3*exp(-mix(dW,dV,.35)*90.)+.075*exp(-dW*20.))*(1.-gb)*uAhead;",

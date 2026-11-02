@@ -287,6 +287,13 @@
 .sim-setrow b { display: block; font-size: 14.5px; font-weight: 600; }
 .sim-setrow p { margin: 3px 0 0; color: var(--s-dim); font-size: 13px; }
 .sim-setrow > :last-child { margin-left: auto; flex: none; }
+.sim-setrow > :only-child { margin-left: 0; flex: 1; }
+.sim-icons { display: flex; flex-wrap: wrap; gap: 10px; padding: 0 0 18px; }
+.sim-icon { width: 96px; padding: 12px 0 10px; border-radius: 12px; background: #14171c; border: 1.5px solid var(--s-line); display: flex; flex-direction: column; align-items: center; gap: 8px; transition: background-color 200ms ease-out, border-color 200ms ease-out; }
+.sim-icon:hover { background: var(--s-raised); }
+.sim-icon[aria-pressed="true"] { border-color: var(--s-accent); background: #18202e; }
+.sim-icon img { width: 44px; height: 44px; }
+.sim-icon span { font-size: 11.5px; color: var(--s-dim); max-width: 88px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ---------- toast ---------- */
 .sim-toast { position: absolute; right: 18px; bottom: 18px; z-index: 5; width: 340px; padding: 14px 16px 14px 18px; border-radius: 12px; background: #1d2129; border: 1px solid var(--s-line2); box-shadow: 0 12px 40px rgba(0, 0, 0, .5); opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity 200ms ease-out, transform 200ms ease-out; }
