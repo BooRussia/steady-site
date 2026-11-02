@@ -62,7 +62,7 @@
 
   // ---------- elements driven by scroll ----------
   var worldEl = $("#world"), lifeEl = $("#life"), carEl = $("#car"), wordEl = $("#word"), racePin = $("#racePin"), hint = $("#hint");
-  var quietSettle = $("#quietSettle"), quietBrand = $("#quietBrand"), quietLine = $("#quietLine"), quietSub = $("#quietSub"), homeCta = $("#homeCta");
+  var quietSettle = $("#quietSettle"), quietLine = $("#quietLine"), quietSub = $("#quietSub"), homeCta = $("#homeCta");
   var wheels = $$(".wheel", carEl);
   var nav = $("#nav"), scrollOrbEl = $("#scrollOrb");
   var shots = $$(".shot");
@@ -130,25 +130,39 @@
     var asp = vw / vh;
 
     // the quiet: the beam thins to one white line, the whole line breaks into colored spikes,
-    // they settle, one beat is written across the dark, the line opens out into the logo,
-    // and the logo drops to the hill as a seed
+    // they settle, and one beat is written across the dark. The beat then slides up over the hill,
+    // a drop gathers at the bottom of it, lets go, and lands where the seed is
     var edge = sm(0, .92, calm);
     var chaos = sm(.05, .1, h) * (1 - sm(.17, .27, h));
-    var open = sm(.54, .62, h), pull = sm(.52, .66, h), fall = sm(.72, .88, h);
-    var sPulse = Math.min(.034, .8 * vw / (16 * vh)), sLogo = Math.min(.0195, .62 * vw / (23 * vh));
-    var mS = mix(mix(sPulse, sLogo, pull), .0007, Math.pow(fall, .6));
-    var mCx = mix(0, (treeX - .5) * asp, fall * fall);
-    var mCy = mix(mix(0, wide ? .055 : .07, pull), crest + .006, sm(.1, 1, fall));
+    var pull = sm(.52, .62, h), form = clamp((h - .58) / .1), fall = clamp((h - .68) / .14), land = clamp((h - .82) / .07);
+    var mS = Math.min(.034, .8 * vw / (16 * vh));
+    var seedX = (treeX - .5) * asp, liftY = wide ? .2 : .17;
+    // the bottom of the beat (1.4, -5.5 in the logo's units) ends up straight above the seed
+    var mCx = mix(0, seedX - 1.4 * mS, pull);
+    var mCy = mix(0, liftY, pull);
+    var dip = h < .68 ? .7 * sm(.2, 1, form) : .7 * Math.cos(fall * 26) * Math.exp(-fall * 9);
+    var dropR = clamp(mS * .3, .0075, .0105), lineW = .0016;
+    var neck = dropR * mix(.5, 2.8, sm(.25, 1, form)), hangY = liftY - (5.5 + .7) * mS;
+    var drop, tail;
+    if (h < .68) {
+      var bead = dropR * mix(.35, 1, sm(0, .8, form));
+      drop = [mCx + 1.4 * mS, mCy - (5.5 + dip) * mS - neck, bead, sm(0, .12, form)];
+      tail = [neck, lineW, 0];
+    } else {
+      var y0 = hangY - neck, sn = sm(0, .12, fall);
+      drop = [seedX, mix(y0, crest + dropR, fall * fall), dropR, h < .82 ? 1 : 0];
+      tail = [mix(neck, dropR * (1.4 + 1.6 * fall), sn), mix(lineW, dropR * .14, sm(0, .06, fall)), dropR * 16 * fall];
+    }
     var sweepT = clamp((h - .28) / .16);
     var sweepE = mix(sweepT, .5 + 4 * Math.pow(sweepT - .5, 3), .6);
     var sweepX = sweepT <= 0 ? -9 : (sweepT >= 1 ? 9 : mix(-asp * .5 - .1, asp * .5 + .55, sweepE));
     var sweepOn = bell(0, .02, .97, 1, sweepT);
-    var mA = sm(.82, .93, edge) * (1 - sm(.9, .95, h));
-    lineFree = mA > .5 && open < .5 && h < .6 && y >= M.quiet.top - vh;
+    var mA = sm(.82, .93, edge) * (1 - sm(.74, .84, h));
+    lineFree = mA > .5 && h < .56 && y >= M.quiet.top - vh;
     lineY = (.5 - mCy) * vh;
     plucks.forEach(function (pl) { pl.t = Math.min(pl.t + dt, 9); });
 
-    var grow = Math.max(.05 * sm(.88, 1, h), h > .88 ? mix(.05, .9, g) : 0);
+    var grow = sm(.85, .93, h) * mix(.05, .9, g);
     grow = mix(grow, 1, sm(.02, .46, f));
     var light = mix(mix(.06, .46, sm(0, 1, g)), 1, sm(.02, .48, f));
 
@@ -158,17 +172,18 @@
         mx: ptr.x, my: ptr.y, mE: ptr.e,
         calm: calm, head: head, carU: carU, carV: carV,
         dim: 1 - .5 * bell(.0, .07, .62, .92, b),
-        hills: sm(.66, .88, h),
+        hills: sm(.6, .8, h),
         mA: mA, mS: mS, mCx: mCx, mCy: mCy,
-        mThick: mix(.0016, 1.2 * mS, open),
+        mThick: lineW,
         mSweep: sweepX, mSweepOn: sweepOn, mAhead: mix(1, .42, sm(.25, .29, h)),
-        mJag: reduce ? chaos * .4 : Math.max(chaos, rush * .2) * (1 - open),
-        mExt: open, mIris: 22 * sm(.54, .66, h),
+        mJag: reduce ? chaos * .4 : Math.max(chaos, rush * .2) * (1 - sm(.54, .58, h)),
+        mFlat: 1 - sm(.62, .72, h), mDip: dip,
+        drop: drop, tail: tail, splash: [seedX, crest, land, land > 0 && land < 1 ? 1 : 0],
         mBloom: bell(.36, .42, .5, .58, h),
         mGlint: -(asp * .5 + .15) + (t * .62) % (asp + .3), mGlintA: reduce ? 0 : bell(.44, .46, .52, .54, h),
-        mSeed: bell(.8, .86, .9, .96, h),
+        mSeed: bell(.82, .85, .92, .98, h),
         mFlash: sweepOn * Math.exp(-(sweepX / .3) * (sweepX / .3)),
-        mTouch: reduce ? 0 : 1,
+        mTouch: reduce ? 0 : 1 - sm(.54, .58, h),
         p1: plucks[0], p2: plucks[1],
         glow: cur.glow, load: cur.load, alert: cur.alert,
         light: light, treeX: treeX, crest: crest,
@@ -201,9 +216,6 @@
     if (hint) hint.style.setProperty("--hint", reduce ? 1 : (.5 + .5 * Math.sin(t * 2)).toFixed(3));
 
     quietSettle.style.opacity = bell(.16, .195, .245, .275, h);
-    var brandOn = bell(.61, .66, .72, .76, h);
-    quietBrand.style.opacity = brandOn;
-    quietBrand.style.transform = "translateY(" + ((1 - sm(.61, .67, h)) * 16).toFixed(1) + "px)";
     var lineOn = bell(.84, .88, .97, 1, h);
     quietLine.style.opacity = lineOn;
     quietLine.style.transform = "translateY(" + ((1 - sm(.84, .9, h)) * 14).toFixed(1) + "px)";

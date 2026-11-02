@@ -10,7 +10,9 @@
     "precision highp float;",
     "uniform vec2 uRes,uMouse,uCar,uMarkC;",
     "uniform vec3 uP1,uP2;",
-    "uniform float uMarkA,uMarkS,uThick,uSweep,uSweepOn,uAhead,uJag,uExt,uIris,uBloom,uGlint,uGlintA,uSeed,uFlash,uTouch;",
+    "uniform float uMarkA,uMarkS,uThick,uSweep,uSweepOn,uAhead,uJag,uFlat,uDip,uBloom,uGlint,uGlintA,uSeed,uFlash,uTouch;",
+    "uniform vec4 uDrop,uSplash;",
+    "uniform vec3 uTail;",
     "uniform float uT,uFlow,uCalm,uHead,uHills,uGlow,uLoad,uLive,uLight,uGx,uCrest,uGrow,uMouseE,uAlert,uTick,uDim;",
     "uniform sampler2D uN;",
     "float vn(vec2 x){vec2 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);return texture2D(uN,(i+f+.5)/256.).r;}",
@@ -138,10 +140,6 @@
 
     "float seg(vec2 p,vec2 a,vec2 b){vec2 pa=p-a,ba=b-a;return length(pa-ba*clamp(dot(pa,ba)/dot(ba,ba),0.,1.));}",
 
-    // Same colours as img/logo.svg ("Ember pulse"): a navy tile, darker at the bottom, and a pulse that warms from amber to coral.
-    "vec3 logoGrad(float t){return mix(vec3(.133,.259,.420),vec3(.078,.153,.259),clamp(t,0.,1.));}",
-    "vec3 ember(float t){return mix(vec3(1.,.761,.302),vec3(.933,.306,.137),clamp(t,0.,1.));}",
-
     // A plucked line: a ripple running out both ways, plus a wobble where it was touched.
     "float pluck(vec3 P,float x){",
     "  if(P.y<.0005)return 0.;",
@@ -151,8 +149,8 @@
     "}",
 
     // The beam after it collapses: one white line that breaks into erratic spikes all along its
-    // length (the beam's colors come back in the spikes), settles, writes a single heartbeat in the
-    // logo's exact shape, and then opens out into the logo itself.
+    // length (the beam's colors come back in the spikes), settles, and writes a single heartbeat in
+    // the logo's exact shape. Its flat ends then fade, and a drop gathers at the bottom of the beat.
     "float jag(float x){",
     "  if(uJag<.001)return 0.;",
     "  float a=vn(vec2(x*26.+uT*3.,4.)),b=vn(vec2(x*24.-uT*2.4,6.));",
@@ -160,55 +158,37 @@
     "  return uJag*((vn(vec2(x*11.+uT*1.8,1.))-.5)*.09+(vn(vec2(x*37.-uT*2.6,2.))-.5)*.025+(a*a-b*b)*.12);",
     "}",
     "float wob(float x,vec2 m){",
-    "  float y=jag(x),free=1.-uExt;",
-    "  y+=free*(pluck(uP1,x)+pluck(uP2,x));",
+    "  float y=jag(x)+pluck(uP1,x)+pluck(uP2,x);",
     "  float off=m.y-uMarkC.y,ox=(x-m.x)/.15;",
-    "  return y+free*uTouch*off*.5*exp(-off*off*90.)*exp(-ox*ox);",
+    "  return y+uTouch*off*.5*exp(-off*off*90.)*exp(-ox*ox);",
     "}",
 
     "vec3 mark(vec3 col,vec2 p){",
     "  float px=1./uRes.y,x=p.x;",
     "  vec3 cream=vec3(1.,.953,.894);",
     "  vec2 m=(uMouse-.5)*vec2(uRes.x/uRes.y,1.);",
-    "  float free=1.-uExt;",
     "  float yn=wob(x,m),ys=(wob(x+.003,m)-yn)/.003;",
     "  vec2 P=vec2(x,p.y-yn);",
     "  vec2 q=(P-uMarkC)/uMarkS;",
-    "  if(uIris>.001){",
-    "    vec2 tq=(p-uMarkC)/uMarkS;",
-    "    vec2 bx=abs(tq)-5.;",
-    "    float dt=length(max(bx,0.))+min(max(bx.x,bx.y),0.)-6.5;",
-    "    float u=(tq.x+12.)/24.,v=(12.-tq.y)/24.;",
-    "    float gt=clamp(((u-.66)*-.32+v)/1.1024-uTouch*((m.y-uMarkC.y)*.13-(m.x-uMarkC.x)*.05),0.,1.);",
-    "    float r=length(tq);",
-    "    float iris=smoothstep(uIris,uIris-3.,r);",
-    "    float pxu=px/uMarkS;",
-    "    float halo=exp(-max(dt,0.)*uMarkS*10.)*smoothstep(uIris*2.6,uIris*1.1,r);",
-    "    col+=ember(1.-v)*halo*.3*(1.+.12*sin(uT*1.6));",
-    "    col=mix(col,logoGrad(gt),smoothstep(pxu,-pxu,dt)*iris);",
-    "  }",
-    "  float yL=-uExt,yR=.2*uExt;",
-    "  vec2 a0=vec2(-8.,yL),a1=vec2(-4.,yL),a2=vec2(-1.8,4.),a3=vec2(1.4,-5.5),a4=vec2(3.6,yR),a5=vec2(8.,yR);",
+    // uDip pulls the bottom of the beat down while the drop hangs from it, and lets it spring back after.
+    "  vec2 a0=vec2(-8.,0.),a1=vec2(-4.,0.),a2=vec2(-1.8,4.),a3=vec2(1.4,-5.5-uDip),a4=vec2(3.6,0.),a5=vec2(8.,0.);",
     "  float dC=min(min(seg(q,a0,a1),seg(q,a1,a2)),min(seg(q,a2,a3),min(seg(q,a3,a4),seg(q,a4,a5))))*uMarkS;",
-    "  float dE=min(seg(q,vec2(-900.,yL),a0),seg(q,a5,vec2(900.,yR)))*uMarkS;",
+    "  float dE=min(seg(q,vec2(-900.,0.),a0),seg(q,a5,vec2(900.,0.)))*uMarkS;",
     // dF approximates the distance across the line, so steep spikes keep their width and don't smear light vertically.
     "  float dV=abs(P.y-uMarkC.y),dF=dV/sqrt(1.+min(ys*ys,60.));",
     "  float behind=smoothstep(uSweep+.002,uSweep-.002,x);",
     "  float w=uThick;",
-    "  float aC=smoothstep(w+px,w-px*.5,dC),aE=smoothstep(.0016+px,.0016-px*.5,dE)*free,aF=smoothstep(w+px,w-px*.5,dF);",
+    "  float aC=smoothstep(w+px,w-px*.5,dC),aE=smoothstep(.0016+px,.0016-px*.5,dE)*uFlat,aF=smoothstep(w+px,w-px*.5,dF);",
     "  float aL=max(max(aC,aE)*behind,aF*(1.-behind)*uAhead);",
-    "  float dB=min(dC,mix(dE,1.,uExt));",
+    "  float dB=min(dC,mix(1.,dE,uFlat));",
     "  float gb=smoothstep(uSweep+.07,uSweep-.07,x);",
     "  float dG=mix(dF,dB,gb);",
     // The spikes take the beam's colors back by height, teal at the top through to blue at the bottom; flat stretches stay white.
     "  float jy=jag(x);",
-    "  vec3 warm=ember((q.x+8.)/16.);",
     "  vec3 lc=mix(cream,spectrum(clamp(.5-jy*4.6,0.,1.)),clamp(uJag*1.6,0.,1.)*smoothstep(.004,.04,abs(jy)));",
-    "  lc=mix(lc,warm,uExt);",
     // The slope correction only holds near the line; further out the glow falls off with height, so it can't streak up the screen.
     "  float dW=max(dF,dV-.04);",
     "  float gl=(.3*exp(-dB*90.)+.075*exp(-dB*20.))*gb+(.3*exp(-mix(dW,dV,.35)*90.)+.075*exp(-dW*20.))*(1.-gb)*uAhead;",
-    "  gl*=1.-.8*uExt;",
     "  col+=lc*gl*uMarkA;",
     "  if(uBloom>.001)col+=spectrum(clamp(.5-q.y/11.,0.,1.))*exp(-dC*13.)*exp(-q.x*q.x/130.)*uBloom*.55*gb*uMarkA;",
     "  if(uSweepOn>.001){",
@@ -219,7 +199,60 @@
     "  }",
     "  if(uGlintA>.001){float g=(x-uGlint)/.05;col+=cream*exp(-g*g)*exp(-dG*75.)*uGlintA*.8;}",
     "  col=mix(col,lc,aL*uMarkA);",
-    "  if(uSeed>.001){float ds=length(p-uMarkC);col+=vec3(.82,.95,.32)*(exp(-ds*110.)*.9+exp(-ds*24.)*.2)*uSeed;}",
+    "  return col;",
+    "}",
+
+    // A teardrop: a circle of radius r1 at p=0 joined smoothly to a smaller one of r2 at (0,h).
+    "float tear(vec2 p,float r1,float r2,float h){",
+    "  if(h<=r1-r2+1e-5)return length(p)-r1;",
+    "  p.x=abs(p.x);",
+    "  float b=(r1-r2)/h,a=sqrt(1.-b*b),k=dot(p,vec2(-b,a));",
+    "  if(k<0.)return length(p)-r1;",
+    "  if(k>a*h)return length(p-vec2(0.,h))-r2;",
+    "  return dot(p,vec2(a,b))-r1;",
+    "}",
+
+    // The drop: it hangs from the bottom of the beat on a narrowing neck, lets go, falls with a faint
+    // trail, and lands on the hill where the seed is. A few droplets kick up, and the seed starts to glow.
+    "vec3 drip(vec3 col,vec2 p){",
+    "  float px=1./uRes.y;",
+    "  vec3 cream=vec3(1.,.953,.894);",
+    "  if(uDrop.w>.001){",
+    "    vec2 d=p-uDrop.xy;",
+    "    float r=uDrop.z,sd=tear(d,r,uTail.y,uTail.x);",
+    "    float fl=max(sd,0.);",
+    "    col+=cream*(exp(-fl*150.)*.5+exp(-fl*32.)*.14)*uDrop.w;",
+    "    if(uTail.z>.001){",
+    "      float ty=d.y/uTail.z;",
+    "      col+=cream*exp(-d.x*d.x/(r*r*.12))*smoothstep(0.,.08,ty)*pow(max(1.-ty,0.),2.)*.3*uDrop.w;",
+    "      float gy=uDrop.y-uCrest;",
+    "      vec2 g=(p-vec2(uDrop.x,uCrest))*vec2(1.,4.);",
+    "      col+=vec3(.86,.92,.55)*exp(-dot(g,g)*900.)*smoothstep(.16,0.,gy)*.25*uDrop.w;",
+    "    }",
+    // A lens: brighter at the rim and toward the bottom, with a small cool highlight up and to the left.
+    "    vec2 hl=d-vec2(-.32,.3)*r;",
+    "    vec3 body=cream*(.78+.22*smoothstep(-r*.4,r,-d.y))+vec3(.95,.98,1.)*exp(-dot(hl,hl)/(r*r*.035))*.55;",
+    "    body+=cream*.18*smoothstep(-r*.45,0.,sd);",
+    "    col=mix(col,body,smoothstep(px,-px*.5,sd)*uDrop.w);",
+    "  }",
+    "  if(uSplash.w>.001){",
+    "    float t=uSplash.z,fade=1.-t;",
+    "    vec2 c=uSplash.xy;",
+    "    vec2 e=(p-c)*vec2(1.,5.5);",
+    "    col+=cream*exp(-dot(e,e)*2600.)*fade*fade*1.3*uSplash.w;",
+    "    float ring=abs(length(e)-.055*pow(t,.55));",
+    "    col+=cream*exp(-ring*260.)*fade*fade*.45*uSplash.w*step(c.y-.012,p.y);",
+    "    for(int i=0;i<6;i++){",
+    "      float fi=float(i),sx=fi<3.?-1.:1.,k=mod(fi,3.);",
+    "      vec2 v=vec2(sx*(.016+k*.014)*(sx>0.?1.15:1.),(.05-k*.012)*(sx>0.?.84:1.));",
+    "      vec2 o=c+vec2(v.x*t,v.y*t-.058*t*t);",
+    "      float rd=.0023*(1.-.55*t)*(1.-.18*k),dd=length(p-o);",
+    "      float on=step(c.y-.002,o.y)*fade;",
+    "      col+=cream*exp(-max(dd-rd,0.)*220.)*.3*on*uSplash.w;",
+    "      col=mix(col,cream,smoothstep(rd+px,rd-px*.5,dd)*on*uSplash.w);",
+    "    }",
+    "  }",
+    "  if(uSeed>.001){float ds=length(p-uSplash.xy);col+=vec3(.82,.95,.32)*(exp(-ds*110.)*.9+exp(-ds*24.)*.2)*uSeed;}",
     "  return col;",
     "}",
 
@@ -232,6 +265,7 @@
     "  if(uHills>.001)col=hills(p,1.-uHills)+col*(1.-smoothstep(0.,.6,uHills));",
     "  if(uFlash>.002)col+=hills(p,0.)*uFlash*1.15;",
     "  if(uMarkA>.001)col=mark(col,p);",
+    "  if(uDrop.w+uSplash.w+uSeed>.001)col=drip(col,p);",
     "  col*=uDim;",
     "  float g1=texture2D(uN,(gl_FragCoord.xy+vec2(uTick*37.,uTick*91.))/256.).g;",
     "  float g2=texture2D(uN,(gl_FragCoord.yx*1.37+vec2(uTick*53.,uTick*17.))/256.).b;",
@@ -578,8 +612,11 @@
       sky.uniform1f(u.uSweepOn, st.mSweepOn);
       sky.uniform1f(u.uAhead, st.mAhead);
       sky.uniform1f(u.uJag, st.mJag);
-      sky.uniform1f(u.uExt, st.mExt);
-      sky.uniform1f(u.uIris, st.mIris);
+      sky.uniform1f(u.uFlat, st.mFlat);
+      sky.uniform1f(u.uDip, st.mDip);
+      sky.uniform4f(u.uDrop, st.drop[0], st.drop[1], st.drop[2], st.drop[3]);
+      sky.uniform3f(u.uTail, st.tail[0], st.tail[1], st.tail[2]);
+      sky.uniform4f(u.uSplash, st.splash[0], st.splash[1], st.splash[2], st.splash[3]);
       sky.uniform1f(u.uBloom, st.mBloom);
       sky.uniform1f(u.uGlint, st.mGlint);
       sky.uniform1f(u.uGlintA, st.mGlintA);

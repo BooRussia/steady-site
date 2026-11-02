@@ -178,13 +178,6 @@ code, .mono { font-family: var(--mono); font-size: .88em; }
 .quiet { height: 470vh; }
 .quiet .pin { text-align: center; }
 .quiet-settle { position: absolute; top: 60%; left: 0; right: 0; margin: 0; font-size: clamp(17px, 1.5vw, 22px); font-weight: 500; opacity: 0; }
-.quiet-brand { position: absolute; top: 69.5%; left: 0; right: 0; padding: 0 16px; opacity: 0; }
-.quiet-name {
-  margin: 0; font-size: clamp(46px, 6vw, 92px); font-weight: 700; letter-spacing: -.04em; line-height: 1.08;
-  background: linear-gradient(180deg, #fff 30%, var(--accent) 100%);
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-}
-.quiet-tag { margin: 8px 0 0; font-size: clamp(16px, 1.4vw, 20px); }
 .quiet-line { position: absolute; top: 14%; left: 16px; right: 16px; opacity: 0; }
 .quiet-sub { position: absolute; top: calc(14% + clamp(52px, 6.2vw, 90px)); left: 0; right: 0; margin: 0; opacity: 0; }
 
