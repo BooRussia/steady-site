@@ -197,6 +197,7 @@ code, .mono { font-family: var(--mono); font-size: .88em; }
 .shot { width: min(calc(100vw - var(--gutter) * 2), 1320px); margin: 32px 0 0; border: 1px solid var(--hairline); border-radius: var(--radius); overflow: hidden; background: var(--bg); transform-origin: 50% 100%; transform: perspective(1400px) rotateX(calc(16deg * (1 - var(--flat, 1)))); }
 .shot img { width: 100%; display: block; }
 .zoom { display: block; cursor: zoom-in; }
+.shot.has-sim { border: 0; border-radius: 0; background: none; overflow: visible; }
 
 .more { margin-top: 18px; max-width: 46em; }
 .more summary { cursor: pointer; font-weight: 500; font-size: 16px; text-underline-offset: 4px; }

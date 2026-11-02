@@ -17,7 +17,8 @@
   <meta name="theme-color" content="#050a06">
   <link rel="icon" href="img/logo.svg" type="image/svg+xml">
   <link rel="preload" href="fonts/Figtree-Variable.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/style.css?v=7">
+  <link rel="stylesheet" href="css/style.css?v=8">
+  <link rel="stylesheet" href="css/sim.css?v=4">
 </head>
 <body>
   <div class="world" id="world" aria-hidden="true">
@@ -204,8 +205,9 @@
     <div class="tools" id="tools">
       <section class="tool" id="t-programs">
         <h2>See the hog at a glance.</h2>
-        <p class="body">One row per app, with its real name and icon. An impact rating and heat colors show what's working your PC hardest.</p>
-        <figure class="shot"><a class="zoom" href="img/programs.webp"><img src="img/programs.webp" alt="Steady's Programs tab, with apps sorted by impact" width="1264" height="761" loading="lazy"></a></figure>
+        <p class="body">One row per app, with its real name and icon. An impact rating and heat colors show what's working your PC hardest. Try it below: every tab works.</p>
+        <figure class="shot has-sim"><div class="sim" id="sim"><img class="fallback" src="img/programs.webp" alt="Steady's Programs tab, with apps sorted by impact" width="1264" height="761" loading="lazy"></div></figure>
+        <p class="note sim-note">A working copy of Steady with made-up data. Click through every page; nothing on your PC is touched. <button type="button" id="simReset">Reset the demo</button></p>
         <details class="more">
           <summary>Everything in Programs</summary>
           <ul>
@@ -439,5 +441,6 @@
 
   <script src="js/world.js?v=14" defer></script>
   <script src="js/main.js?v=9" defer></script>
+  <script src="js/sim.js?v=4" defer></script>
 </body>
 </html>
